@@ -39,7 +39,7 @@ if not KillFeed then
       name = "panel",
       alpha = 0,
       x = KillFeed._panel:w() * KillFeed.settings.x_pos,
-      y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * tweak_data.menu.pd2_small_font_size
+      y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size
     })
     
     local kill_text = attacker_name .. " " .. status .. " " .. target_name
@@ -64,9 +64,9 @@ if not KillFeed then
       self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
     end
     if KillFeed.settings.y_align == 1 then
-      self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * tweak_data.menu.pd2_small_font_size)
+      self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size)
     else
-      self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * tweak_data.menu.pd2_small_font_size)
+      self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * KillFeed.settings.font_size)
     end
     
     self._created_t = KillFeed._t
@@ -92,9 +92,9 @@ if not KillFeed then
       self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
     end
     if KillFeed.settings.y_align == 1 then
-      self._panel:set_top(self._panel:top() + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * tweak_data.menu.pd2_small_font_size) - self._panel:top()) / 2)
+      self._panel:set_top(self._panel:top() + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * KillFeed.settings.font_size) - self._panel:top()) / 2)
     else
-      self._panel:set_bottom(self._panel:bottom() + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * tweak_data.menu.pd2_small_font_size) - self._panel:bottom()) / 2)
+      self._panel:set_bottom(self._panel:bottom() + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * KillFeed.settings.font_size) - self._panel:bottom()) / 2)
     end
     
   end

@@ -10,6 +10,7 @@ if not KillFeed then
     y_align = 1,
     x_pos = 0.03,
     y_pos = 0.15,
+    style = 1,
     font_size = tweak_data.menu.pd2_small_font_size,
     max_shown = 5,
     lifetime = 3,
@@ -18,7 +19,8 @@ if not KillFeed then
     show_player_kills = true,
     show_crew_kills = true,
     show_team_ai_kills = true,
-    show_npc_kills = true
+    show_npc_kills = true,
+    special_kills_only = false
   }
   KillFeed.unit_names = {
     spooc = "Cloaker",
@@ -29,11 +31,9 @@ if not KillFeed then
   KillFeed.KillInfo = KillInfo
 
   function KillInfo:init(offset, attacker_name, attacker_color, target_name, target_color, is_local, status)
-    attacker_name = attacker_name or "attacker"
     attacker_color = attacker_color or Color.white
-    target_name = target_name or "target"
     target_color = target_color or Color.white
-    status = status or "killed"
+    status = status or "kill"
     
     self._panel = KillFeed._panel:panel({
       name = "panel",
@@ -41,14 +41,17 @@ if not KillFeed then
       x = KillFeed._panel:w() * KillFeed.settings.x_pos,
       y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size
     })
-    
-    local kill_text = attacker_name .. " " .. status .. " " .. target_name
+    if KillFeed.settings.style == 1 then
+      kill_text = attacker_name .. "  " .. target_name
+    else
+      kill_text = attacker_name .. " " .. managers.localization:text("KillFeed_text_" .. status) .. " " .. target_name
+    end
     local text = self._panel:text({
       name = "text",
       text = kill_text,
       font = tweak_data.menu.pd2_large_font,
       font_size = math.floor(KillFeed.settings.font_size),
-      color = Color.white:with_alpha(0.8)
+      color = KillFeed.settings.style == 1 and Color.yellow or Color.white:with_alpha(0.8)
     })
     
     text:set_range_color(0, utf8.len(attacker_name), attacker_color)
@@ -132,7 +135,7 @@ if not KillFeed then
     end
     local info = self.unit_information[unit:key()]
     if info then
-      return info.name, info.color, info.type
+      return self.unit_information[unit:key()]
     end
     local unit_base = unit:base()
     if unit_base then
@@ -146,7 +149,7 @@ if not KillFeed then
     local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and managers.criminals:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
     local owner_base = alive(owner) and owner:base()
 
-    local name
+    local name = "unknown"
     local unit_type = "npc"
     if unit_base.is_husk_player or unit_base.is_local_player then
       unit_type = unit_base.is_local_player and "player" or "crew"
@@ -177,21 +180,21 @@ if not KillFeed then
     local color_id = alive(owner) and managers.criminals:character_color_id_by_unit(owner) or alive(unit) and managers.criminals:character_color_id_by_unit(unit)
     local color = is_special and Color(tweak_data.contour.character.dangerous_color:unpack()) or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id]
     
-    self.unit_information[unit:key()] = { name = name, color = color, type = unit_type }
-    return name, color, unit_type
+    self.unit_information[unit:key()] = { name = name, color = color, type = unit_type, is_special = is_special }
+    return self.unit_information[unit:key()]
   end
   
   function KillFeed:add_kill(attacker, target, status)
-    local attacker_name, attacker_color, attacker_type = self:get_unit_information(attacker)
-    if not attacker_name then
+    local attacker_info = self:get_unit_information(attacker)
+    if not attacker_info then
       return
     end
-    local target_name, target_color, target_type = self:get_unit_information(target)
-    if not target_name then
+    local target_info = self:get_unit_information(target)
+    if not target_info then
       return
     end
-    if self.settings["show_" .. attacker_type .. "_kills"] then
-      KillInfo:new(#self.kill_infos, attacker_name, attacker_color, target_name, target_color, attacker_type == "player" or target_type == "player", status)
+    if self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
+      KillInfo:new(#self.kill_infos, attacker_info.name, attacker_info.color, target_info.name, target_info.color, attacker_info.type == "player" or target_info.type == "player", status)
     end
   end
   
@@ -204,7 +207,8 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if  #self.kill_infos == 0 or recreate then
-        KillInfo:new(#self.kill_infos, "Player", tweak_data.chat_colors[1], "Cop", Color.white, true)
+        KillInfo:new(#self.kill_infos, "Player", tweak_data.chat_colors[1], "Cop", Color.white, true, "kill")
+        KillInfo:new(#self.kill_infos, "Taser", Color(tweak_data.contour.character.dangerous_color:unpack()), "Player's Sentry Gun", tweak_data.chat_colors[1], true, "destroy")
       end
     end
   end
@@ -277,7 +281,7 @@ if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
   local die_original = SentryGunDamage.die
   function SentryGunDamage:die(attacker_unit, ...)
     if not self._dead then
-      KillFeed:add_kill(attacker_unit, self._unit, "destroyed")
+      KillFeed:add_kill(attacker_unit, self._unit, "destroy")
     end
     return die_original(self, attacker_unit, ...)
   end
@@ -319,7 +323,7 @@ if RequiredScript == "lib/managers/menumanager" then
 
     MenuCallbackHandler.KillFeed_value = function(self, item)
       KillFeed.settings[item:name()] = item:value()
-      KillFeed:chk_create_sample_kill()
+      KillFeed:chk_create_sample_kill(item:name() == "style")
       KillFeed:save()
     end
     
@@ -332,55 +336,64 @@ if RequiredScript == "lib/managers/menumanager" then
 
     MenuHelper:AddMultipleChoice({
       id = "x_align",
-      title = "menu_x_align_name",
+      title = "KillFeed_menu_x_align_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.x_align,
-      items = { "menu_align_left", "menu_align_center", "menu_align_right" },
+      items = { "KillFeed_menu_align_left", "KillFeed_menu_align_center", "KillFeed_menu_align_right" },
       menu_id = menu_id_main,
-      priority = 20
+      priority = 99
     })
     MenuHelper:AddMultipleChoice({
       id = "y_align",
-      title = "menu_y_align_name",
+      title = "KillFeed_menu_y_align_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.y_align,
-      items = { "menu_align_top", "menu_align_bottom" },
+      items = { "KillFeed_menu_align_top", "KillFeed_menu_align_bottom" },
       menu_id = menu_id_main,
-      priority = 19
+      priority = 98
     })
     
     MenuHelper:AddSlider({
       id = "x_pos",
-      title = "menu_x_pos_name",
+      title = "KillFeed_menu_x_pos_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.x_pos,
       min = 0,
       max = 1,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 18
+      priority = 97
     })
     MenuHelper:AddSlider({
       id = "y_pos",
-      title = "menu_y_pos_name",
+      title = "KillFeed_menu_y_pos_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.y_pos,
       min = 0,
       max = 1,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 17
+      priority = 96
     })
     
     MenuHelper:AddDivider({
       id = "divider",
       size = 24,
       menu_id = menu_id_main,
-      priority = 16
+      priority = 89
+    })
+    MenuHelper:AddMultipleChoice({
+      id = "style",
+      title = "KillFeed_menu_style_name",
+      callback = "KillFeed_value",
+      value = KillFeed.settings.style,
+      items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text" },
+      menu_id = menu_id_main,
+      priority = 88
     })
     MenuHelper:AddSlider({
       id = "font_size",
-      title = "menu_font_size_name",
+      title = "KillFeed_menu_font_size_name",
       callback = "KillFeed_value_rounded",
       value = KillFeed.settings.font_size,
       min = math.floor(tweak_data.menu.pd2_small_font_size * 0.5),
@@ -388,11 +401,11 @@ if RequiredScript == "lib/managers/menumanager" then
       step = 1,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 15
+      priority = 87
     })
     MenuHelper:AddSlider({
       id = "max_shown",
-      title = "menu_max_shown_name",
+      title = "KillFeed_menu_max_shown_name",
       callback = "KillFeed_value_rounded",
       value = KillFeed.settings.max_shown,
       min = 1,
@@ -400,11 +413,11 @@ if RequiredScript == "lib/managers/menumanager" then
       step = 1,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 14
+      priority = 85
     })
     MenuHelper:AddSlider({
       id = "lifetime",
-      title = "menu_lifetime_name",
+      title = "KillFeed_menu_lifetime_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.lifetime,
       min = 1,
@@ -412,11 +425,11 @@ if RequiredScript == "lib/managers/menumanager" then
       step = 0.1,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 13
+      priority = 84
     })
     MenuHelper:AddSlider({
       id = "fade_in_time",
-      title = "menu_fade_in_time_name",
+      title = "KillFeed_menu_fade_in_time_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.fade_in_time,
       min = 0,
@@ -424,11 +437,11 @@ if RequiredScript == "lib/managers/menumanager" then
       step = 0.05,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 12
+      priority = 83
     })
     MenuHelper:AddSlider({
       id = "fade_out_time",
-      title = "menu_fade_out_time_name",
+      title = "KillFeed_menu_fade_out_time_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.fade_out_time,
       min = 0,
@@ -436,46 +449,61 @@ if RequiredScript == "lib/managers/menumanager" then
       step = 0.05,
       show_value = true,
       menu_id = menu_id_main,
-      priority = 11
+      priority = 82
     })
     
     MenuHelper:AddDivider({
       id = "divider",
       size = 24,
       menu_id = menu_id_main,
-      priority = 10
+      priority = 79
     })
     MenuHelper:AddToggle({
       id = "show_player_kills",
-      title = "menu_show_player_kills_name",
+      title = "KillFeed_menu_show_player_kills_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.show_player_kills,
       menu_id = menu_id_main,
-      priority = 9
+      priority = 78
     })
     MenuHelper:AddToggle({
       id = "show_crew_kills",
-      title = "menu_show_crew_kills_name",
+      title = "KillFeed_menu_show_crew_kills_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.show_crew_kills,
       menu_id = menu_id_main,
-      priority = 8
+      priority = 77
     })
     MenuHelper:AddToggle({
       id = "show_team_ai_kills",
-      title = "menu_show_team_ai_kills_name",
+      title = "KillFeed_menu_show_team_ai_kills_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.show_team_ai_kills,
       menu_id = menu_id_main,
-      priority = 7
+      priority = 76
     })
     MenuHelper:AddToggle({
       id = "show_npc_kills",
-      title = "menu_show_npc_kills_name",
+      title = "KillFeed_menu_show_npc_kills_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.show_npc_kills,
       menu_id = menu_id_main,
-      priority = 6
+      priority = 75
+    })
+    
+    MenuHelper:AddDivider({
+      id = "divider",
+      size = 24,
+      menu_id = menu_id_main,
+      priority = 69
+    })
+    MenuHelper:AddToggle({
+      id = "special_kills_only",
+      title = "KillFeed_menu_special_kills_only_name",
+      callback = "KillFeed_toggle",
+      value = KillFeed.settings.special_kills_only,
+      menu_id = menu_id_main,
+      priority = 68
     })
     
   end)

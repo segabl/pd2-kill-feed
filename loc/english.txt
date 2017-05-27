@@ -1,0 +1,22 @@
+{
+  "KillFeed_menu_main_name" : "Kill Feed",
+  "KillFeed_menu_main_desc" : "Customize kill feed settings",
+  "menu_x_align_name" : "Horizontal alignment",
+  "menu_y_align_name" : "Vertical alignment",
+  "menu_align_left" : "Left",
+  "menu_align_center" : "Center",
+  "menu_align_right" : "Right",
+  "menu_align_top" : "Top",
+  "menu_align_bottom" : "Bottom",
+  "menu_x_pos_name" : "Horizontal position",
+  "menu_y_pos_name" : "Vertical position",
+  "menu_font_size_name" : "Font size",
+  "menu_max_shown_name" : "Max amount of messages",
+  "menu_lifetime_name" : "Message lifetime",
+  "menu_fade_in_time_name" : "Message fade in time",
+  "menu_fade_out_time_name" : "Message fade out time",
+  "menu_show_player_kills_name" : "Show my kills",
+  "menu_show_crew_kills_name" : "Show crew kills",
+  "menu_show_team_ai_kills_name" : "Show team AI kills",
+  "menu_show_npc_kills_name" : "Show NPC kills"
+}

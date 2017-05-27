@@ -193,7 +193,8 @@ if not KillFeed then
     if not target_info then
       return
     end
-    if self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
+    if not target_info.dead and self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
+      target_info.dead = true
       KillInfo:new(#self.kill_infos, attacker_info.name, attacker_info.color, target_info.name, target_info.color, attacker_info.type == "player" or target_info.type == "player", status)
     end
   end
@@ -253,12 +254,13 @@ end
 
 if RequiredScript == "lib/units/enemies/cop/copdamage" then
 
-  local die_original = CopDamage.die
-  function CopDamage:die(damage_info, ...)
-    if not self._dead then
+  local _on_damage_received_original = CopDamage._on_damage_received
+  function CopDamage:_on_damage_received(damage_info, ...)
+    local result = _on_damage_received_original(self, damage_info, ...)
+    if self._dead then
       KillFeed:add_kill(damage_info.attacker_unit, self._unit)
     end
-    return die_original(self, damage_info, ...)
+    return result
   end
 
 end
@@ -278,12 +280,13 @@ end
 
 if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
 
-  local die_original = SentryGunDamage.die
-  function SentryGunDamage:die(attacker_unit, ...)
-    if not self._dead then
+  local _apply_damage_original = SentryGunDamage._apply_damage
+  function SentryGunDamage:_apply_damage(damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
+    local result = _apply_damage_original(self, damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
+    if self._dead then
       KillFeed:add_kill(attacker_unit, self._unit, "destroy")
     end
-    return die_original(self, attacker_unit, ...)
+    return result
   end
   
 end

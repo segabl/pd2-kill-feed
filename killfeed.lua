@@ -5,6 +5,7 @@ if not KillFeed then
   KillFeed.save_path = SavePath
   KillFeed.kill_infos = {}
   KillFeed.unit_information = {}
+  KillFeed.assist_information = {}
   KillFeed.unit_name = {
     spooc = "Cloaker",
     tank = "Bulldozer"
@@ -25,7 +26,9 @@ if not KillFeed then
     show_team_ai_kills = true,
     show_npc_kills = true,
     show_assists = false,
-    special_kills_only = false
+    special_kills_only = false,
+    update_rate = 1 / 30,
+    assist_time = 4
   }
   KillFeed.color = {
     default = Color.white,
@@ -37,7 +40,8 @@ if not KillFeed then
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
 
-  function KillInfo:init(offset, attacker_info, target_info, assist_info, status)
+  function KillInfo:init(attacker_info, target_info, assist_info, status)
+    local offset = #KillFeed.kill_infos
     self._panel = KillFeed._panel:panel({
       alpha = 0,
       x = KillFeed._panel:w() * KillFeed.settings.x_pos,
@@ -115,8 +119,11 @@ if not KillFeed then
     
   end
 
-  function KillInfo:destroy()
+  function KillInfo:destroy(pos)
     KillFeed._panel:remove(self._panel)
+    if pos then
+      table.remove(KillFeed.kill_infos, pos)
+    end
   end
   
   function KillFeed:init()
@@ -129,17 +136,26 @@ if not KillFeed then
 
   function KillFeed:update(t, dt)
     self._t = t
-    if self._update_t and t < self._update_t + 0.03 then
+    if self._update_t and t < self._update_t + self.settings.update_rate then
       return
     end
     if #self.kill_infos > 0 and self.kill_infos[1].dead or #self.kill_infos > self.settings.max_shown then
-      self.kill_infos[1]:destroy()
-      table.remove(self.kill_infos, 1)
+      self.kill_infos[1]:destroy(1)
     end
     for i, info in ipairs(self.kill_infos) do
       info:update(t, i - 1)
     end
     self._update_t = t
+  end
+  
+  function KillFeed:get_name_by_tweak_data_id(tweak)
+    if not type(tweak) == "string" then
+      return
+    end
+    if not self.unit_name[tweak] then
+      self.unit_name[tweak] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+    end
+    return self.unit_name[tweak]
   end
   
   function KillFeed:get_unit_information(unit)
@@ -174,17 +190,14 @@ if not KillFeed then
       if Keepers and Keepers.GetJokerNameByPeer then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
       else
-        name = "Joker"
-        if owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
+        name = self:get_name_by_tweak_data_id(tweak)
+        if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
           name = owner:network():peer():name() .. "'s " .. name
         end
       end
     elseif type(tweak) == "string" then
-      name = self.unit_name[tweak] or string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
-      if not self.unit_name[tweak] then
-        self.unit_name[tweak] = name
-      end
-      if owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
+      name = self:get_name_by_tweak_data_id(tweak)
+      if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
         name = owner:network():peer():name() .. "'s " .. name
       end
     end
@@ -201,19 +214,26 @@ if not KillFeed then
     return self.unit_information[unit:key()]
   end
   
+  function KillFeed:clear_unit_information(unit)
+    local unit_key = unit:key()
+    self.assist_information[unit_key] = nil
+    self.unit_information[unit_key] = nil
+  end
+  
   function KillFeed:get_assist_information(unit, killer)
-    if not alive(unit) or not unit:character_damage() then
+    if not alive(unit) or not alive(killer) then
       return
     end
-    unit_damage = unit:character_damage()
-    if not unit_damage._assist_damage then
+    local unit_key = unit:key()
+    local entry = self.assist_information[unit_key]
+    if not entry then
       return
     end
     local killer_key = killer:key()
-    local most_damage = unit_damage._assist_damage[killer_key] and unit_damage._assist_damage[killer_key].damage or 0
+    local most_damage = 0
     local most_damage_unit
-    for k, v in pairs(unit_damage._assist_damage) do
-      if v.damage > most_damage then
+    for k, v in pairs(entry) do
+      if k ~= killer_key and v.damage > most_damage and v.t + self.settings.assist_time > (self._t or 0) then
         most_damage_unit = v.unit
         most_damage = v.damage
       end
@@ -221,6 +241,19 @@ if not KillFeed then
     return self:get_unit_information(most_damage_unit)
   end
   
+  function KillFeed:set_assist_information(unit, attacker, damage)
+    if not alive(unit) or not alive(attacker) then
+      return
+    end
+    local unit_key = unit:key()
+    local attacker_key = attacker:key()
+    self.assist_information[unit_key] = self.assist_information[unit_key] or {}
+    local entry = self.assist_information[unit_key]
+    entry[attacker_key] = entry[attacker_key] or { unit = attacker, damage = 0 }
+    entry[attacker_key].damage = entry[attacker_key].damage + damage
+    entry[attacker_key].t = self._t or 0
+  end
+
   function KillFeed:add_kill(damage_info, target, status)
     local attacker_info = self:get_unit_information(damage_info.attacker_unit)
     if not attacker_info then
@@ -232,7 +265,7 @@ if not KillFeed then
     end
     if self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
       target_info.dead = true
-      KillInfo:new(#self.kill_infos, attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
+      KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
     end
   end
   
@@ -244,9 +277,9 @@ if not KillFeed then
         end
         self.kill_infos = {}
       end
-      if  #self.kill_infos == 0 or recreate then
-        KillInfo:new(#self.kill_infos, { name = "Player", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new(#self.kill_infos, { name = "FBI Heavy SWAT", color = self.color.default}, { name = "Player's Sentry Gun", color = tweak_data.chat_colors[1] }, nil, "destroy")
+      if #self.kill_infos == 0 or recreate then
+        KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
+        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default}, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
       end
     end
   end
@@ -291,25 +324,21 @@ end
 
 if RequiredScript == "lib/units/enemies/cop/copdamage" then
 
+  local convert_to_criminal_original = CopDamage.convert_to_criminal
+  function CopDamage:convert_to_criminal(...)
+    KillFeed:clear_unit_information(self._unit)
+    return convert_to_criminal_original(self, ...)
+  end
+
   local _on_damage_received_original = CopDamage._on_damage_received
   function CopDamage:_on_damage_received(damage_info, ...)
     local result = _on_damage_received_original(self, damage_info, ...)
     if self._dead then
       KillFeed:add_kill(damage_info, self._unit)
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
-      local attacker_key = damage_info.attacker_unit:key()
-      self._assist_damage = self._assist_damage or {}
-      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
-      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
+      KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
     return result
-  end
-  
-  local convert_to_criminal_original = CopDamage.convert_to_criminal
-  function CopDamage:convert_to_criminal(...)
-    self._assist_damage = {}
-    KillFeed.unit_information[self._unit:key()] = nil
-    return convert_to_criminal_original(self, ...)
   end
 
 end
@@ -322,10 +351,7 @@ if RequiredScript == "lib/units/civilians/civiliandamage" then
     if self._dead then
       KillFeed:add_kill(damage_info, self._unit)
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
-      local attacker_key = damage_info.attacker_unit:key()
-      self._assist_damage = self._assist_damage or {}
-      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
-      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
+      KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
     return result
   end
@@ -339,11 +365,8 @@ if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
     local result = _apply_damage_original(self, damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
     if self._dead then
       KillFeed:add_kill({ attacker_unit = attacker_unit }, self._unit, "destroy")
-    elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
-      local attacker_key = damage_info.attacker_unit:key()
-      self._assist_damage = self._assist_damage or {}
-      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
-      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
+    elseif KillFeed.settings.show_assists and alive(attacker_unit) and type(damage) == "number" then
+      KillFeed:set_assist_information(self._unit, attacker_unit, damage)
     end
     return result
   end
@@ -422,6 +445,7 @@ if RequiredScript == "lib/managers/menumanager" then
       value = KillFeed.settings.x_pos,
       min = 0,
       max = 1,
+      step = 0.01,
       show_value = true,
       menu_id = menu_id_main,
       priority = 97
@@ -433,6 +457,7 @@ if RequiredScript == "lib/managers/menumanager" then
       value = KillFeed.settings.y_pos,
       min = 0,
       max = 1,
+      step = 0.01,
       show_value = true,
       menu_id = menu_id_main,
       priority = 96

@@ -5,6 +5,10 @@ if not KillFeed then
   KillFeed.save_path = SavePath
   KillFeed.kill_infos = {}
   KillFeed.unit_information = {}
+  KillFeed.unit_name = {
+    spooc = "Cloaker",
+    tank = "Bulldozer"
+  }
   KillFeed.settings = {
     x_align = 1,
     y_align = 1,
@@ -20,44 +24,53 @@ if not KillFeed then
     show_crew_kills = true,
     show_team_ai_kills = true,
     show_npc_kills = true,
+    show_assists = false,
     special_kills_only = false
   }
-  KillFeed.unit_names = {
-    spooc = "Cloaker",
-    tank = "Bulldozer"
+  KillFeed.color = {
+    default = Color.white,
+    special = Color(tweak_data.contour.character.dangerous_color:unpack()),
+    text = Color.white:with_alpha(0.8),
+    skull = Color.yellow
   }
   
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
 
-  function KillInfo:init(offset, attacker_name, attacker_color, target_name, target_color, is_local, status)
-    attacker_color = attacker_color or Color.white
-    target_color = target_color or Color.white
-    status = status or "kill"
-    
+  function KillInfo:init(offset, attacker_info, target_info, assist_info, status)
     self._panel = KillFeed._panel:panel({
-      name = "panel",
       alpha = 0,
       x = KillFeed._panel:w() * KillFeed.settings.x_pos,
-      y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size
+      y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size,
     })
-    if KillFeed.settings.style == 1 then
-      kill_text = attacker_name .. "  " .. target_name
-    else
-      kill_text = attacker_name .. " " .. managers.localization:text("KillFeed_text_" .. status) .. " " .. target_name
+    
+    local w, h = 0, 0
+    if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
+      local kill_text
+      if KillFeed.settings.style == 1 then
+        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. "  " .. target_info.name
+      elseif KillFeed.settings.style == 2 then
+        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. " " .. managers.localization:text("KillFeed_text_" .. status) .. " " .. target_info.name
+      end
+      local text = self._panel:text({
+        text = kill_text,
+        font = tweak_data.menu.pd2_large_font,
+        font_size = math.floor(KillFeed.settings.font_size),
+        color = KillFeed.settings.style == 1 and KillFeed.color.skull or KillFeed.color.text
+      })
+      local _, _, tw, th = text:text_rect()
+      w = tw
+      h = th
+      
+      text:set_range_color(0, utf8.len(attacker_info.name), attacker_info.color)
+      text:set_range_color(utf8.len(kill_text) - utf8.len(target_info.name), utf8.len(kill_text), target_info.color)
+      if assist_info then
+        local len = 1
+        text:set_range_color(utf8.len(attacker_info.name), utf8.len(attacker_info.name) + len, KillFeed.color.text)
+        text:set_range_color(utf8.len(attacker_info.name) + len, utf8.len(attacker_info.name) + len + utf8.len(assist_info.name), assist_info.color)
+      end
     end
-    local text = self._panel:text({
-      name = "text",
-      text = kill_text,
-      font = tweak_data.menu.pd2_large_font,
-      font_size = math.floor(KillFeed.settings.font_size),
-      color = KillFeed.settings.style == 1 and Color.yellow or Color.white:with_alpha(0.8)
-    })
     
-    text:set_range_color(0, utf8.len(attacker_name), attacker_color)
-    text:set_range_color(utf8.len(kill_text) - utf8.len(target_name), utf8.len(kill_text), target_color)
-    
-    local _, _, w, h = text:text_rect()
     self._panel:set_size(w, h)
     if KillFeed.settings.x_align == 1 then
       self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
@@ -149,7 +162,7 @@ if not KillFeed then
     local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and managers.criminals:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
     local owner_base = alive(owner) and owner:base()
 
-    local name = "unknown"
+    local name
     local unit_type = "npc"
     if unit_base.is_husk_player or unit_base.is_local_player then
       unit_type = unit_base.is_local_player and "player" or "crew"
@@ -167,35 +180,59 @@ if not KillFeed then
         end
       end
     elseif type(tweak) == "string" then
-      name = self.unit_names[tweak] or string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
-      if not self.unit_names[tweak] then
-        self.unit_names[tweak] = name
+      name = self.unit_name[tweak] or string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+      if not self.unit_name[tweak] then
+        self.unit_name[tweak] = name
       end
       if owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
         name = owner:network():peer():name() .. "'s " .. name
       end
     end
     
+    if not name then
+      return
+    end
+    
     local is_special = tweak and tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout
     local color_id = alive(owner) and managers.criminals:character_color_id_by_unit(owner) or alive(unit) and managers.criminals:character_color_id_by_unit(unit)
-    local color = is_special and Color(tweak_data.contour.character.dangerous_color:unpack()) or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id]
+    local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     
     self.unit_information[unit:key()] = { name = name, color = color, type = unit_type, is_special = is_special }
     return self.unit_information[unit:key()]
   end
   
-  function KillFeed:add_kill(attacker, target, status)
-    local attacker_info = self:get_unit_information(attacker)
+  function KillFeed:get_assist_information(unit, killer)
+    if not alive(unit) or not unit:character_damage() then
+      return
+    end
+    unit_damage = unit:character_damage()
+    if not unit_damage._assist_damage then
+      return
+    end
+    local killer_key = killer:key()
+    local most_damage = unit_damage._assist_damage[killer_key] and unit_damage._assist_damage[killer_key].damage or 0
+    local most_damage_unit
+    for k, v in pairs(unit_damage._assist_damage) do
+      if v.damage > most_damage then
+        most_damage_unit = v.unit
+        most_damage = v.damage
+      end
+    end
+    return self:get_unit_information(most_damage_unit)
+  end
+  
+  function KillFeed:add_kill(damage_info, target, status)
+    local attacker_info = self:get_unit_information(damage_info.attacker_unit)
     if not attacker_info then
       return
     end
     local target_info = self:get_unit_information(target)
-    if not target_info then
+    if not target_info or target_info.dead then
       return
     end
-    if not target_info.dead and self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
+    if self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
       target_info.dead = true
-      KillInfo:new(#self.kill_infos, attacker_info.name, attacker_info.color, target_info.name, target_info.color, attacker_info.type == "player" or target_info.type == "player", status)
+      KillInfo:new(#self.kill_infos, attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
     end
   end
   
@@ -208,8 +245,8 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if  #self.kill_infos == 0 or recreate then
-        KillInfo:new(#self.kill_infos, "Player", tweak_data.chat_colors[1], "Cop", Color.white, true, "kill")
-        KillInfo:new(#self.kill_infos, "Taser", Color(tweak_data.contour.character.dangerous_color:unpack()), "Player's Sentry Gun", tweak_data.chat_colors[1], true, "destroy")
+        KillInfo:new(#self.kill_infos, { name = "Player", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
+        KillInfo:new(#self.kill_infos, { name = "FBI Heavy SWAT", color = self.color.default}, { name = "Player's Sentry Gun", color = tweak_data.chat_colors[1] }, nil, "destroy")
       end
     end
   end
@@ -258,9 +295,21 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
   function CopDamage:_on_damage_received(damage_info, ...)
     local result = _on_damage_received_original(self, damage_info, ...)
     if self._dead then
-      KillFeed:add_kill(damage_info.attacker_unit, self._unit)
+      KillFeed:add_kill(damage_info, self._unit)
+    elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
+      local attacker_key = damage_info.attacker_unit:key()
+      self._assist_damage = self._assist_damage or {}
+      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
+      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
     end
     return result
+  end
+  
+  local convert_to_criminal_original = CopDamage.convert_to_criminal
+  function CopDamage:convert_to_criminal(...)
+    self._assist_damage = {}
+    KillFeed.unit_information[self._unit:key()] = nil
+    return convert_to_criminal_original(self, ...)
   end
 
 end
@@ -271,7 +320,12 @@ if RequiredScript == "lib/units/civilians/civiliandamage" then
   function CivilianDamage:_on_damage_received(damage_info, ...)
     local result = _on_damage_received_original(self, damage_info, ...)
     if self._dead then
-      KillFeed:add_kill(damage_info.attacker_unit, self._unit)
+      KillFeed:add_kill(damage_info, self._unit)
+    elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
+      local attacker_key = damage_info.attacker_unit:key()
+      self._assist_damage = self._assist_damage or {}
+      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
+      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
     end
     return result
   end
@@ -284,7 +338,12 @@ if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
   function SentryGunDamage:_apply_damage(damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
     local result = _apply_damage_original(self, damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
     if self._dead then
-      KillFeed:add_kill(attacker_unit, self._unit, "destroy")
+      KillFeed:add_kill({ attacker_unit = attacker_unit }, self._unit, "destroy")
+    elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
+      local attacker_key = damage_info.attacker_unit:key()
+      self._assist_damage = self._assist_damage or {}
+      self._assist_damage[attacker_key] =  self._assist_damage[attacker_key] or { damage = 0, unit = damage_info.attacker_unit }
+      self._assist_damage[attacker_key].damage = self._assist_damage[attacker_key].damage + damage_info.damage
     end
     return result
   end
@@ -501,12 +560,20 @@ if RequiredScript == "lib/managers/menumanager" then
       priority = 69
     })
     MenuHelper:AddToggle({
+      id = "show_assists",
+      title = "KillFeed_menu_show_assists_name",
+      callback = "KillFeed_toggle",
+      value = KillFeed.settings.show_assists,
+      menu_id = menu_id_main,
+      priority = 68
+    })
+    MenuHelper:AddToggle({
       id = "special_kills_only",
       title = "KillFeed_menu_special_kills_only_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.special_kills_only,
       menu_id = menu_id_main,
-      priority = 68
+      priority = 67
     })
     
   end)

@@ -6,6 +6,7 @@ if not KillFeed then
   KillFeed.kill_infos = {}
   KillFeed.unit_information = {}
   KillFeed.assist_information = {}
+  KillFeed.localized_text = {}
   KillFeed.unit_name = {
     spooc = "Cloaker",
     tank = "Bulldozer"
@@ -41,41 +42,40 @@ if not KillFeed then
   KillFeed.KillInfo = KillInfo
 
   function KillInfo:init(attacker_info, target_info, assist_info, status)
-    local offset = #KillFeed.kill_infos
     self._panel = KillFeed._panel:panel({
       alpha = 0,
-      x = KillFeed._panel:w() * KillFeed.settings.x_pos,
-      y = KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size,
+      h = KillFeed.settings.font_size
     })
     
-    local w, h = 0, 0
+    local w = 0
     if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
       local kill_text
       if KillFeed.settings.style == 1 then
         kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. "  " .. target_info.name
       elseif KillFeed.settings.style == 2 then
-        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. " " .. managers.localization:text("KillFeed_text_" .. status) .. " " .. target_info.name
+        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status) .. " " .. target_info.name
       end
       local text = self._panel:text({
         text = kill_text,
         font = tweak_data.menu.pd2_large_font,
-        font_size = math.floor(KillFeed.settings.font_size),
+        font_size = KillFeed.settings.font_size,
         color = KillFeed.settings.style == 1 and KillFeed.color.skull or KillFeed.color.text
       })
       local _, _, tw, th = text:text_rect()
       w = tw
-      h = th
       
-      text:set_range_color(0, utf8.len(attacker_info.name), attacker_info.color)
-      text:set_range_color(utf8.len(kill_text) - utf8.len(target_info.name), utf8.len(kill_text), target_info.color)
+      local len = utf8.len
+      text:set_range_color(0, len(attacker_info.name), attacker_info.color)
+      text:set_range_color(len(kill_text) - len(target_info.name), len(kill_text), target_info.color)
       if assist_info then
-        local len = 1
-        text:set_range_color(utf8.len(attacker_info.name), utf8.len(attacker_info.name) + len, KillFeed.color.text)
-        text:set_range_color(utf8.len(attacker_info.name) + len, utf8.len(attacker_info.name) + len + utf8.len(assist_info.name), assist_info.color)
+        local l = 1
+        text:set_range_color(len(attacker_info.name), len(attacker_info.name) + l, KillFeed.color.text)
+        text:set_range_color(len(attacker_info.name) + l, len(attacker_info.name) + l + len(assist_info.name), assist_info.color)
       end
     end
     
-    self._panel:set_size(w, h)
+    self._panel:set_w(w)
+    
     if KillFeed.settings.x_align == 1 then
       self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
     elseif KillFeed.settings.x_align == 2 then
@@ -83,6 +83,8 @@ if not KillFeed then
     else
       self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
     end
+    
+    local offset = #KillFeed.kill_infos
     if KillFeed.settings.y_align == 1 then
       self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size)
     else
@@ -104,17 +106,12 @@ if not KillFeed then
       return
     end
     self._panel:set_alpha(math.min(f / (KillFeed.settings.fade_in_time / self._lifetime), (1 - f) / (KillFeed.settings.fade_out_time / self._lifetime), 1))
-    if KillFeed.settings.x_align == 1 then
-      self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
-    elseif KillFeed.settings.x_align == 2 then
-      self._panel:set_center_x(KillFeed._panel:w() * KillFeed.settings.x_pos)
-    else
-      self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
-    end
+
+    local pos = KillFeed.settings.y_align == 1 and self._panel:top() or self._panel:bottom()
     if KillFeed.settings.y_align == 1 then
-      self._panel:set_top(self._panel:top() + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * KillFeed.settings.font_size) - self._panel:top()) / 2)
+      self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * KillFeed.settings.font_size) - pos) / 2)
     else
-      self._panel:set_bottom(self._panel:bottom() + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * KillFeed.settings.font_size) - self._panel:bottom()) / 2)
+      self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * KillFeed.settings.font_size) - pos) / 2)
     end
     
   end
@@ -148,8 +145,15 @@ if not KillFeed then
     self._update_t = t
   end
   
+  function KillFeed:get_localized_text(text)
+    if not self.localized_text[text] then
+      self.localized_text[text] = managers.localization:text(text)
+    end
+    return self.localized_text[text]
+  end
+  
   function KillFeed:get_name_by_tweak_data_id(tweak)
-    if not type(tweak) == "string" then
+    if not tweak then
       return
     end
     if not self.unit_name[tweak] then
@@ -162,20 +166,22 @@ if not KillFeed then
     if not alive(unit) then
       return
     end
-    local info = self.unit_information[unit:key()]
+    local unit_key = unit:key()
+    local info = self.unit_information[unit_key]
     if info then
-      return self.unit_information[unit:key()]
+      return self.unit_information[unit_key]
     end
     local unit_base = unit:base()
-    if unit_base then
-      local thrower = unit_base._thrower_unit
-      unit = thrower or unit
-      unit_base = alive(unit) and unit:base() or unit_base
-    end
+
+    unit = alive(unit_base._thrower_unit) and unit_base._thrower_unit or unit
+    unit_base = alive(unit) and unit:base() or unit_base
     
     local tweak = unit_base._tweak_table or unit_base._tweak_table_id
     
-    local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and managers.criminals:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
+    local gstate = managers.groupai:state()
+    local cm = managers.criminals
+    
+    local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and cm:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
     local owner_base = alive(owner) and owner:base()
 
     local name
@@ -183,10 +189,10 @@ if not KillFeed then
     if unit_base.is_husk_player or unit_base.is_local_player then
       unit_type = unit_base.is_local_player and "player" or "crew"
       name = unit:network():peer():name()
-    elseif managers.groupai:state():is_unit_team_AI(unit) then
+    elseif gstate:is_unit_team_AI(unit) then
       unit_type = "team_ai"
       name = unit_base:nick_name()
-    elseif managers.groupai:state():is_enemy_converted_to_criminal(unit) then
+    elseif gstate:is_enemy_converted_to_criminal(unit) then
       if Keepers and Keepers.GetJokerNameByPeer then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
       else
@@ -195,7 +201,7 @@ if not KillFeed then
           name = owner:network():peer():name() .. "'s " .. name
         end
       end
-    elseif type(tweak) == "string" then
+    else
       name = self:get_name_by_tweak_data_id(tweak)
       if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
         name = owner:network():peer():name() .. "'s " .. name
@@ -207,33 +213,33 @@ if not KillFeed then
     end
     
     local is_special = tweak and tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout
-    local color_id = alive(owner) and managers.criminals:character_color_id_by_unit(owner) or alive(unit) and managers.criminals:character_color_id_by_unit(unit)
+    local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
     local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     
-    self.unit_information[unit:key()] = { name = name, color = color, type = unit_type, is_special = is_special }
-    return self.unit_information[unit:key()]
+    local information = { 
+      name = name,
+      color = color,
+      type = unit_type,
+      is_special = is_special
+    }
+    self.unit_information[unit_key] = information
+    return information
   end
-  
-  function KillFeed:clear_unit_information(unit)
-    local unit_key = unit:key()
-    self.assist_information[unit_key] = nil
-    self.unit_information[unit_key] = nil
-  end
-  
+   
   function KillFeed:get_assist_information(unit, killer)
     if not alive(unit) or not alive(killer) then
       return
     end
-    local unit_key = unit:key()
-    local entry = self.assist_information[unit_key]
+    local entry = self.assist_information[unit:key()]
     if not entry then
       return
     end
     local killer_key = killer:key()
     local most_damage = 0
     local most_damage_unit
+    local t = self._t or 0
     for k, v in pairs(entry) do
-      if k ~= killer_key and v.damage > most_damage and v.t + self.settings.assist_time > (self._t or 0) then
+      if k ~= killer_key and v.damage > most_damage and v.t + self.settings.assist_time > t then
         most_damage_unit = v.unit
         most_damage = v.damage
       end
@@ -255,18 +261,15 @@ if not KillFeed then
   end
 
   function KillFeed:add_kill(damage_info, target, status)
-    local attacker_info = self:get_unit_information(damage_info.attacker_unit)
-    if not attacker_info then
-      return
-    end
     local target_info = self:get_unit_information(target)
-    if not target_info or target_info.dead then
+    if not target_info or self.settings.special_kills_only and not target_info.is_special then
       return
     end
-    if self.settings["show_" .. attacker_info.type .. "_kills"] and (target_info.is_special or not self.settings.special_kills_only) then
-      target_info.dead = true
-      KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
+    local attacker_info = self:get_unit_information(damage_info.attacker_unit)
+    if not attacker_info or not self.settings["show_" .. attacker_info.type .. "_kills"] then
+      return
     end
+    KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
   end
   
   function KillFeed:chk_create_sample_kill(recreate)
@@ -279,7 +282,7 @@ if not KillFeed then
       end
       if #self.kill_infos == 0 or recreate then
         KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default}, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
+        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default }, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
       end
     end
   end
@@ -306,12 +309,14 @@ if not KillFeed then
 
 end
 
+
 if RequiredScript == "lib/managers/hudmanager" then
 
   local init_finalize_original = HUDManager.init_finalize
   function HUDManager:init_finalize(...)
     local result = init_finalize_original(self, ...)
     KillFeed:init()
+    return result
   end
 
   local update_original = HUDManager.update
@@ -322,41 +327,50 @@ if RequiredScript == "lib/managers/hudmanager" then
 
 end
 
+
 if RequiredScript == "lib/units/enemies/cop/copdamage" then
 
   local convert_to_criminal_original = CopDamage.convert_to_criminal
   function CopDamage:convert_to_criminal(...)
-    KillFeed:clear_unit_information(self._unit)
+    local unit_key = self._unit:key()
+    KillFeed.assist_information[unit_key] = nil
+    KillFeed.unit_information[unit_key] = nil
     return convert_to_criminal_original(self, ...)
   end
 
   local _on_damage_received_original = CopDamage._on_damage_received
   function CopDamage:_on_damage_received(damage_info, ...)
-    local result = _on_damage_received_original(self, damage_info, ...)
     if self._dead then
-      KillFeed:add_kill(damage_info, self._unit)
+      if not self._kill_feed_shown then
+        KillFeed:add_kill(damage_info, self._unit)
+        self._kill_feed_shown = true
+      end
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
       KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
-    return result
+    return _on_damage_received_original(self, damage_info, ...)
   end
 
 end
+
 
 if RequiredScript == "lib/units/civilians/civiliandamage" then
 
   local _on_damage_received_original = CivilianDamage._on_damage_received
   function CivilianDamage:_on_damage_received(damage_info, ...)
-    local result = _on_damage_received_original(self, damage_info, ...)
     if self._dead then
-      KillFeed:add_kill(damage_info, self._unit)
+      if not self._kill_feed_shown then
+        KillFeed:add_kill(damage_info, self._unit)
+        self._kill_feed_shown = true
+      end
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
       KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
-    return result
+    return _on_damage_received_original(self, damage_info, ...)
   end
 
 end
+
 
 if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
 
@@ -364,7 +378,10 @@ if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
   function SentryGunDamage:_apply_damage(damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
     local result = _apply_damage_original(self, damage, dmg_shield, dmg_body, is_local, attacker_unit, ...)
     if self._dead then
-      KillFeed:add_kill({ attacker_unit = attacker_unit }, self._unit, "destroy")
+      if not self._kill_feed_shown then
+        KillFeed:add_kill({ attacker_unit = attacker_unit }, self._unit, "destroy")
+        self._kill_feed_shown = true
+      end
     elseif KillFeed.settings.show_assists and alive(attacker_unit) and type(damage) == "number" then
       KillFeed:set_assist_information(self._unit, attacker_unit, damage)
     end
@@ -373,10 +390,6 @@ if RequiredScript == "lib/units/equipment/sentry_gun/sentrygundamage" then
   
 end
 
-if RequiredScript == "lib/units/beings/player/playerdamage" then
-
-  
-end
 
 if RequiredScript == "lib/managers/menumanager" then
 
@@ -402,13 +415,13 @@ if RequiredScript == "lib/managers/menumanager" then
     
     MenuCallbackHandler.KillFeed_toggle = function(self, item)
       KillFeed.settings[item:name()] = (item:value() == "on")
-      KillFeed:chk_create_sample_kill()
+      KillFeed:chk_create_sample_kill(item:name() == "show_assists")
       KillFeed:save()
     end
 
     MenuCallbackHandler.KillFeed_value = function(self, item)
       KillFeed.settings[item:name()] = item:value()
-      KillFeed:chk_create_sample_kill(item:name() == "style")
+      KillFeed:chk_create_sample_kill(item:name() == "style" or item:name() == "x_align" or item:name() == "y_align")
       KillFeed:save()
     end
     

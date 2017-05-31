@@ -7,9 +7,37 @@ if not KillFeed then
   KillFeed.unit_information = {}
   KillFeed.assist_information = {}
   KillFeed.localized_text = {}
+  KillFeed.weapon_texture = {
+    default = {},
+    melee = {},
+    throwable = {}
+  }
   KillFeed.unit_name = {
     spooc = "Cloaker",
     tank = "Bulldozer"
+  }
+  KillFeed.npc_weapon_translation = {
+    beretta92 = "b92fs",
+    c45 = "glock_17",
+    raging_bull = "new_raging_bull",
+    m4 = "new_m4",
+    ak47 = "ak74",
+    mossberg = "huntsman",
+    mp5 = "new_mp5",
+    mp5_tactical = "new_mp5",
+    mac11 = "mac10",
+    m14_sniper_npc = "g3",
+    ump = "schakal",
+    scar_murky = "scar",
+    rpk_lmg = "rpk",
+    svd_snp = "siltstone",
+    akmsu_smg = "akmsu",
+    asval_smg = "asval",
+    sr2_smg = "sr2",
+    ak47_ass = "ak74",
+    x_c45 = "x_g17",
+    sg417 = "contraband",
+    svdsil_snp = "siltstone"
   }
   KillFeed.settings = {
     x_align = 1,
@@ -41,7 +69,7 @@ if not KillFeed then
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
 
-  function KillInfo:init(attacker_info, target_info, assist_info, status)
+  function KillInfo:init(attacker_info, target_info, assist_info, status, weapon_texture)
     self._panel = KillFeed._panel:panel({
       alpha = 0,
       h = KillFeed.settings.font_size
@@ -49,6 +77,7 @@ if not KillFeed then
     
     local w = 0
     if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
+      -- style 1 and 2
       local kill_text
       if KillFeed.settings.style == 1 then
         kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. "  " .. target_info.name
@@ -72,6 +101,44 @@ if not KillFeed then
         text:set_range_color(len(attacker_info.name), len(attacker_info.name) + l, KillFeed.color.text)
         text:set_range_color(len(attacker_info.name) + l, len(attacker_info.name) + l + len(assist_info.name), assist_info.color)
       end
+    elseif KillFeed.settings.style == 3 then
+      -- style 3 (with weapon icons)
+      local kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "")
+      local text = self._panel:text({
+        text = kill_text,
+        font = tweak_data.menu.pd2_large_font,
+        font_size = KillFeed.settings.font_size,
+        color = attacker_info.color
+      })
+      local _, _, tw, th = text:text_rect()
+      w = w + tw + 4
+      
+      local len = utf8.len
+      if assist_info then
+        local l = 1
+        text:set_range_color(len(attacker_info.name), len(attacker_info.name) + l, KillFeed.color.text)
+        text:set_range_color(len(attacker_info.name) + l, len(attacker_info.name) + l + len(assist_info.name), assist_info.color)
+      end
+      
+      local image = self._panel:bitmap({
+        texture = weapon_texture,
+        x = w,
+        scale_x = -1
+      })
+      local new_w = (image:texture_width() / image:texture_height()) * KillFeed.settings.font_size * 1.5
+      image:set_size(new_w, KillFeed.settings.font_size * 1.5)
+      image:set_center_y(KillFeed.settings.font_size / 2)
+      w = w + new_w + 4
+      
+      local text = self._panel:text({
+        text = target_info.name,
+        font = tweak_data.menu.pd2_large_font,
+        font_size = KillFeed.settings.font_size,
+        color = target_info.color,
+        x = w
+      })
+      local _, _, tw, th = text:text_rect()
+      w = w + tw
     end
     
     self._panel:set_w(w)
@@ -260,6 +327,39 @@ if not KillFeed then
     entry[attacker_key].t = self._t or 0
   end
 
+  function KillFeed:get_weapon_texture(damage_info)
+    local weapon = damage_info.weapon_unit
+    local melee = damage_info.variant == "melee" and damage_info.name_id
+    local throwable = damage_info.variant == "fire" and damage_info.is_molotov or weapon and weapon:base()._tweak_projectile_entry
+    local type = melee and "melee" or throwable and "throwable" or "default"
+    local weapon_id = melee or throwable or weapon and weapon:base()._name_id
+    if not weapon_id then
+      return "guis/textures/pd2/endscreen/what_is_this"
+    end
+    weapon_id = weapon_id:gsub("_crew$", ""):gsub("_npc$", "")
+    weapon_id = self.npc_weapon_translation[weapon_id] or weapon_id
+    if not self.weapon_texture[type][weapon_id] then
+      if type == "default" then
+        self.weapon_texture[type][weapon_id] = managers.blackmarket:get_weapon_icon_path(weapon_id) or "guis/textures/pd2/endscreen/what_is_this"
+      elseif type == "melee" then
+        local guis_catalog = "guis/"
+        local bundle_folder = tweak_data.blackmarket.melee_weapons[weapon_id] and tweak_data.blackmarket.melee_weapons[weapon_id].texture_bundle_folder
+        if bundle_folder then
+          guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+        end
+        self.weapon_texture[type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/melee_weapons/" .. tostring(weapon_id)
+      elseif type == "throwable" then
+        local guis_catalog = "guis/"
+        local bundle_folder = tweak_data.blackmarket.projectiles[weapon_id] and tweak_data.blackmarket.projectiles[weapon_id].texture_bundle_folder
+        if bundle_folder then
+          guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
+        end
+        self.weapon_texture[type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/grenades/" .. tostring(weapon_id)
+      end
+    end
+    return self.weapon_texture[type][weapon_id]
+  end
+  
   function KillFeed:add_kill(damage_info, target, status)
     local target_info = self:get_unit_information(target)
     if not target_info or self.settings.special_kills_only and not target_info.is_special then
@@ -269,7 +369,9 @@ if not KillFeed then
     if not attacker_info or not self.settings["show_" .. attacker_info.type .. "_kills"] then
       return
     end
-    KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
+    log(tostring(self:get_weapon_texture(damage_info)))
+    local assist_info = self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit)
+    KillInfo:new(attacker_info, target_info, assist_info, status or "kill", KillFeed.settings.style == 3 and self:get_weapon_texture(damage_info))
   end
   
   function KillFeed:chk_create_sample_kill(recreate)
@@ -281,8 +383,8 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if #self.kill_infos == 0 or recreate then
-        KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default }, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
+        KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill", managers.blackmarket:get_weapon_icon_path("new_m4"))
+        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default }, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy", managers.blackmarket:get_weapon_icon_path("new_m4"))
       end
     end
   end
@@ -345,6 +447,7 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
         KillFeed:add_kill(damage_info, self._unit)
         self._kill_feed_shown = true
       end
+      PrintTable(damage_info)
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
       KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
@@ -487,7 +590,7 @@ if RequiredScript == "lib/managers/menumanager" then
       title = "KillFeed_menu_style_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.style,
-      items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text" },
+      items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text", "KillFeed_menu_style_weapons" },
       menu_id = menu_id_main,
       priority = 88
     })

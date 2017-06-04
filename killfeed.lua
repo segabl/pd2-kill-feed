@@ -37,7 +37,8 @@ if not KillFeed then
     ak47_ass = "ak74",
     x_c45 = "x_g17",
     sg417 = "contraband",
-    svdsil_snp = "siltstone"
+    svdsil_snp = "siltstone",
+    ben = "benelli"
   }
   KillFeed.settings = {
     x_align = 1,
@@ -71,8 +72,7 @@ if not KillFeed then
 
   function KillInfo:init(attacker_info, target_info, assist_info, status, weapon_texture)
     self._panel = KillFeed._panel:panel({
-      alpha = 0,
-      h = KillFeed.settings.font_size
+      alpha = 0
     })
     
     local w = 0
@@ -108,7 +108,8 @@ if not KillFeed then
         text = kill_text,
         font = tweak_data.menu.pd2_large_font,
         font_size = KillFeed.settings.font_size,
-        color = attacker_info.color
+        color = attacker_info.color,
+        y = KillFeed.settings.font_size * 0.25
       })
       local _, _, tw, th = text:text_rect()
       w = w + tw + 4
@@ -127,7 +128,6 @@ if not KillFeed then
       })
       local new_w = (image:texture_width() / image:texture_height()) * KillFeed.settings.font_size * 1.5
       image:set_size(new_w, KillFeed.settings.font_size * 1.5)
-      image:set_center_y(KillFeed.settings.font_size / 2)
       w = w + new_w + 4
       
       local text = self._panel:text({
@@ -135,7 +135,8 @@ if not KillFeed then
         font = tweak_data.menu.pd2_large_font,
         font_size = KillFeed.settings.font_size,
         color = target_info.color,
-        x = w
+        x = w,
+        y = KillFeed.settings.font_size * 0.25
       })
       local _, _, tw, th = text:text_rect()
       w = w + tw
@@ -327,37 +328,62 @@ if not KillFeed then
     entry[attacker_key].t = self._t or 0
   end
 
+  function KillFeed:estimated_weapon(unit, variant)
+    local unit_inventory = unit:inventory()
+    local unit_base = unit:base()
+    if not unit_inventory then
+      return
+    end
+    local weapon_type, weapon_id
+    if variant == "bullet" then
+      local weapon = unit_inventory.equipped_unit and unit_inventory:equipped_unit()
+      weapon_type = "default"
+      weapon_id = weapon and weapon:base()._name_id
+    elseif variant == "melee" then
+      weapon_type = "melee"
+      weapon_id = unit_base.is_husk_player and unit:network():peer():melee_id()
+    end
+    return weapon_type, weapon_id
+  end
+  
   function KillFeed:get_weapon_texture(damage_info)
     local weapon = damage_info.weapon_unit
-    local melee = damage_info.variant == "melee" and damage_info.name_id
-    local throwable = damage_info.variant == "fire" and damage_info.is_molotov or weapon and weapon:base()._tweak_projectile_entry
-    local type = melee and "melee" or throwable and "throwable" or "default"
-    local weapon_id = melee or throwable or weapon and weapon:base()._name_id
+    local weapon_base = alive(weapon) and weapon:base() or {}
+    local n = {
+      default = weapon_base._name_id or weapon_base._weapon_id,
+      melee = damage_info.variant == "melee" and damage_info.name_id,
+      throwable = weapon_base._tweak_projectile_entry
+    }
+    local weapon_type = n.default and "default" or n.melee and "melee" or n.throwable and "throwable"
+    local weapon_id = weapon_type and n[weapon_type]
     if not weapon_id then
-      return "guis/textures/pd2/endscreen/what_is_this"
+      weapon_type, weapon_id = self:estimated_weapon(damage_info.attacker_unit, damage_info.variant)
+      if not weapon_id then
+        return "guis/textures/pd2/endscreen/what_is_this"
+      end
     end
     weapon_id = weapon_id:gsub("_crew$", ""):gsub("_npc$", "")
     weapon_id = self.npc_weapon_translation[weapon_id] or weapon_id
-    if not self.weapon_texture[type][weapon_id] then
-      if type == "default" then
-        self.weapon_texture[type][weapon_id] = managers.blackmarket:get_weapon_icon_path(weapon_id) or "guis/textures/pd2/endscreen/what_is_this"
-      elseif type == "melee" then
+    if not self.weapon_texture[weapon_type][weapon_id] then
+      if weapon_type == "default" then
+        self.weapon_texture[weapon_type][weapon_id] = managers.blackmarket:get_weapon_icon_path(weapon_id) or "guis/textures/pd2/endscreen/what_is_this"
+      elseif weapon_type == "melee" then
         local guis_catalog = "guis/"
         local bundle_folder = tweak_data.blackmarket.melee_weapons[weapon_id] and tweak_data.blackmarket.melee_weapons[weapon_id].texture_bundle_folder
         if bundle_folder then
           guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
         end
-        self.weapon_texture[type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/melee_weapons/" .. tostring(weapon_id)
-      elseif type == "throwable" then
+        self.weapon_texture[weapon_type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/melee_weapons/" .. tostring(weapon_id)
+      elseif weapon_type == "throwable" then
         local guis_catalog = "guis/"
         local bundle_folder = tweak_data.blackmarket.projectiles[weapon_id] and tweak_data.blackmarket.projectiles[weapon_id].texture_bundle_folder
         if bundle_folder then
           guis_catalog = guis_catalog .. "dlcs/" .. tostring(bundle_folder) .. "/"
         end
-        self.weapon_texture[type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/grenades/" .. tostring(weapon_id)
+        self.weapon_texture[weapon_type][weapon_id] = guis_catalog .. "textures/pd2/blackmarket/icons/grenades/" .. tostring(weapon_id)
       end
     end
-    return self.weapon_texture[type][weapon_id]
+    return self.weapon_texture[weapon_type][weapon_id]
   end
   
   function KillFeed:add_kill(damage_info, target, status)
@@ -369,7 +395,6 @@ if not KillFeed then
     if not attacker_info or not self.settings["show_" .. attacker_info.type .. "_kills"] then
       return
     end
-    log(tostring(self:get_weapon_texture(damage_info)))
     local assist_info = self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit)
     KillInfo:new(attacker_info, target_info, assist_info, status or "kill", KillFeed.settings.style == 3 and self:get_weapon_texture(damage_info))
   end
@@ -447,7 +472,6 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
         KillFeed:add_kill(damage_info, self._unit)
         self._kill_feed_shown = true
       end
-      PrintTable(damage_info)
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
       KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end

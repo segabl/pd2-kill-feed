@@ -9,7 +9,9 @@ if not KillFeed then
   KillFeed.localized_text = {}
   KillFeed.unit_name = {
     spooc = "Cloaker",
-    tank = "Bulldozer"
+    tank = "Bulldozer",
+    tank_medic = "Medic Bulldozer",
+    tank_mini = "Minigun Bulldozer"
   }
   KillFeed.settings = {
     x_align = 1,
@@ -157,7 +159,7 @@ if not KillFeed then
       return
     end
     if not self.unit_name[tweak] then
-      self.unit_name[tweak] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+      self.unit_name[tweak] = string.capitalize(tweak:gsub("_module$", ""):gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
     end
     return self.unit_name[tweak]
   end

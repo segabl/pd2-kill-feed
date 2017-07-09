@@ -397,8 +397,8 @@ if RequiredScript == "lib/managers/menumanager" then
 
   Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitPlayerKillFeed", function(loc)
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt")
-    for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/")) do
-      local str = filename:match('^(.*).txt$')
+    for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
+      local str = filename:match("^(.*).txt$")
       if str and Idstring(str) and Idstring(str):key() == SystemInfo:language():key() then
         loc:load_localization_file(KillFeed.mod_path .. "loc/" .. filename)
         break

@@ -159,7 +159,7 @@ if not KillFeed then
       return
     end
     if not self.unit_name[tweak] then
-      self.unit_name[tweak] = string.capitalize(tweak:gsub("_module$", ""):gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+      self.unit_name[tweak] = string.capitalize(tweak:gsub("_no_idle$", ""):gsub("_module$", ""):gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
     end
     return self.unit_name[tweak]
   end
@@ -395,7 +395,7 @@ end
 
 if RequiredScript == "lib/managers/menumanager" then
 
-  Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitPlayerKillFeed", function(loc)
+  Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt")
     for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
       local str = filename:match("^(.*).txt$")

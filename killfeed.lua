@@ -224,7 +224,7 @@ if not KillFeed then
       return
     end
     
-    local is_special = tweak and tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout
+    local is_special = tweak and tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or tweak and (tweak:find("_boss") or tweak:find("_turret"))
     local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
     local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     

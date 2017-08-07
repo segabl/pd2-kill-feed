@@ -11,7 +11,17 @@ if not KillFeed then
     spooc = "Cloaker",
     tank = "Bulldozer",
     tank_medic = "Medic Bulldozer",
-    tank_mini = "Minigun Bulldozer"
+    tank_mini = "Minigun Bulldozer",
+    swat_van_turret_module = "SWAT Turret",
+    ceiling_turret_module = "Ceiling Turret",
+    ceiling_turret_module_no_idle = "Ceiling Turret",
+    chavez_boss = "Chavez",
+    hector_boss = "Hector",
+    hector_boss_no_armor = "Hector",
+    drug_lord_boss = "Ernesto Sosa",
+    drug_lord_boss_stealth = "Ernesto Sosa",
+    old_hoxton_mission = "Hoxton",
+    spa_vip = "Charon"
   }
   KillFeed.settings = {
     x_align = 1,
@@ -159,7 +169,7 @@ if not KillFeed then
       return
     end
     if not self.unit_name[tweak] then
-      self.unit_name[tweak] = string.capitalize(tweak:gsub("_no_idle$", ""):gsub("_module$", ""):gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+      self.unit_name[tweak] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
     end
     return self.unit_name[tweak]
   end

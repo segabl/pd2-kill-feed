@@ -4,7 +4,7 @@
   "author" : "Nebby",
   "updates" : [
     {
-      "revision" : 19,
+      "revision" : 20,
       "identifier" : "kill_feed"
     }
   ],

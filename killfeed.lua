@@ -309,13 +309,12 @@ if not KillFeed then
 
   function KillFeed:load()
     local file = io.open(self.save_path .. "kill_feed.txt", "r")
-    local data
     if file then
-      data = json.decode(file:read("*all"))
+      local data = json.decode(file:read("*all")) or {}
       file:close()
-    end
-    for k, v in pairs(data or {}) do
-      self.settings[k] = v
+      for k, v in pairs(data) do
+        self.settings[k] = v
+      end
     end
   end
 

@@ -1,7 +1,10 @@
 {
   "name" : "KillFeed",
-  "description" : "Displays a kill feed",
-  "author" : "Nebby",
+  "description" : "Displays a highly customizable kill feed",
+  "author" : "Shiny Hoppip",
+  "blt_version" : 2,
+  "color" : "0.043 0.808 0.6",
+  "image" : "mod.png",
   "updates" : [
     {
       "revision" : 20,

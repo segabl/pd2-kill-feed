@@ -7,7 +7,7 @@
   "image" : "mod.png",
   "updates" : [
     {
-      "revision" : 20,
+      "revision" : 21,
       "identifier" : "kill_feed"
     }
   ],

@@ -5,12 +5,8 @@
   "blt_version" : 2,
   "color" : "0.043 0.808 0.6",
   "image" : "mod.png",
-  "updates" : [
-    {
-      "revision" : 21,
-      "identifier" : "kill_feed"
-    }
-  ],
+  "version" : "2.1",
+  "updates" : [ { "identifier" : "kill_feed" } ],
   "hooks" : [
     { "hook_id" : "lib/managers/hudmanager", "script_path" : "killfeed.lua" },
     { "hook_id" : "lib/managers/menumanager", "script_path" : "killfeed.lua" },

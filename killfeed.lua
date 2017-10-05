@@ -16,6 +16,7 @@ if not KillFeed then
     swat_van_turret_module = "SWAT Turret",
     ceiling_turret_module = "Ceiling Turret",
     ceiling_turret_module_no_idle = "Ceiling Turret",
+    mobster_boss = "Commissar",
     chavez_boss = "Chavez",
     hector_boss = "Hector",
     hector_boss_no_armor = "Hector",

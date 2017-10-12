@@ -58,6 +58,7 @@ if not KillFeed then
   function KillInfo:init(attacker_info, target_info, assist_info, status)
     self._panel = KillFeed._panel:panel({
       alpha = 0,
+      layer = 100,
       h = KillFeed.settings.font_size
     })
     

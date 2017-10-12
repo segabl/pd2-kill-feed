@@ -149,7 +149,7 @@ if not KillFeed then
     if self._update_t and t < self._update_t + self.settings.update_rate then
       return
     end
-    if #self.kill_infos > 0 and self.kill_infos[1].dead or #self.kill_infos > self.settings.max_shown then
+    if #self.kill_infos > 0 and self.kill_infos[1].dead then
       self.kill_infos[1]:destroy(1)
     end
     for i, info in ipairs(self.kill_infos) do
@@ -283,6 +283,9 @@ if not KillFeed then
       return
     end
     KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
+    if #self.kill_infos > self.settings.max_shown then
+      self.kill_infos[1]:destroy(1)
+    end
   end
   
   function KillFeed:chk_create_sample_kill(recreate)

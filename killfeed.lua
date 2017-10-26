@@ -9,7 +9,9 @@ if not KillFeed then
   KillFeed.localized_text = {}
   KillFeed.unit_name = {
     spooc = "Cloaker",
-    tank = "Bulldozer",
+    tank_green = "Bulldozer",
+    tank_black = "Blackdozer",
+    tank_skull = "Skulldozer",
     tank_medic = "Medic Bulldozer",
     tank_mini = "Minigun Bulldozer",
     tank_hw = "Headless Bulldozer",
@@ -211,7 +213,7 @@ if not KillFeed then
       if Keepers and gstate:is_enemy_converted_to_criminal(unit) then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
       else
-        name = self:get_name_by_tweak_data_id(tweak)
+        name = self:get_name_by_tweak_data_id(unit_base._stats_name or tweak)
         if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
           name = owner:network():peer():name() .. "'s " .. name
         end
@@ -222,7 +224,7 @@ if not KillFeed then
       return
     end
     
-    local is_special = gstate:is_enemy_special(unit) or tweak and (tweak:find("_boss") or tweak:find("_turret"))
+    local is_special = gstate:is_enemy_special(unit) or tweak and (tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or (tweak:find("_boss") or tweak:find("_turret")))
     local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
     local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     

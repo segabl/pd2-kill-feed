@@ -1,6 +1,6 @@
 if not KillFeed then
 
-  _G.KillFeed = {} 
+  _G.KillFeed = {}
   KillFeed.mod_path = ModPath
   KillFeed.save_path = SavePath
   KillFeed.kill_infos = {}
@@ -40,7 +40,7 @@ if not KillFeed then
     show_crew_kills = true,
     show_team_ai_kills = true,
     show_npc_kills = true,
-    show_assists = false,
+    show_assists = true,
     special_kills_only = false,
     update_rate = 1 / 30,
     assist_time = 4
@@ -128,7 +128,6 @@ if not KillFeed then
     else
       self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * KillFeed.settings.font_size) - pos) / 2)
     end
-    
   end
 
   function KillInfo:destroy(pos)
@@ -186,9 +185,11 @@ if not KillFeed then
       return self.unit_information[unit_key]
     end
     local unit_base = unit:base()
-
-    unit = alive(unit_base._thrower_unit) and unit_base._thrower_unit or unit
-    unit_base = alive(unit) and unit:base() or unit_base
+    
+    if alive(unit_base._thrower_unit) then
+      unit = unit_base._thrower_unit
+      unit_base = unit:base()
+    end
     
     local tweak = unit_base._tweak_table or unit_base._tweak_table_id
     
@@ -197,17 +198,17 @@ if not KillFeed then
     
     local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and cm:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
     local owner_base = alive(owner) and owner:base()
-
-    local name
-    local unit_type = "npc"
+    
+    local name, unit_type
     if unit_base.is_husk_player or unit_base.is_local_player then
       unit_type = unit_base.is_local_player and "player" or "crew"
       name = unit:network():peer():name()
     elseif gstate:is_unit_team_AI(unit) then
       unit_type = "team_ai"
       name = unit_base:nick_name()
-    elseif gstate:is_enemy_converted_to_criminal(unit) then
-      if Keepers and Keepers.GetJokerNameByPeer then
+    else
+      unit_type = "npc"
+      if Keepers and gstate:is_enemy_converted_to_criminal(unit) then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
       else
         name = self:get_name_by_tweak_data_id(tweak)
@@ -215,22 +216,17 @@ if not KillFeed then
           name = owner:network():peer():name() .. "'s " .. name
         end
       end
-    else
-      name = self:get_name_by_tweak_data_id(tweak)
-      if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
-        name = owner:network():peer():name() .. "'s " .. name
-      end
     end
     
     if not name then
       return
     end
     
-    local is_special = tweak and tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or tweak and (tweak:find("_boss") or tweak:find("_turret"))
+    local is_special = gstate:is_enemy_special(unit) or tweak and (tweak:find("_boss") or tweak:find("_turret"))
     local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
     local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     
-    local information = { 
+    local information = {
       name = name,
       color = color,
       type = unit_type,

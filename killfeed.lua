@@ -124,6 +124,16 @@ if not KillFeed then
     end
     self._panel:set_alpha(math.min(f / (KillFeed.settings.fade_in_time / self._lifetime), (1 - f) / (KillFeed.settings.fade_out_time / self._lifetime), 1))
 
+    if KillFeed._update_x_pos then
+      if KillFeed.settings.x_align == 1 then
+        self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
+      elseif KillFeed.settings.x_align == 2 then
+        self._panel:set_center(KillFeed._panel:w() * KillFeed.settings.x_pos)
+      else
+        self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
+      end
+    end
+    
     local pos = KillFeed.settings.y_align == 1 and self._panel:top() or self._panel:bottom()
     if KillFeed.settings.y_align == 1 then
       self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * KillFeed.settings.font_size) - pos) / 2)
@@ -298,6 +308,12 @@ if not KillFeed then
       if #self.kill_infos == 0 or recreate then
         KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
         KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default }, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
+      else
+        self._update_x_pos = true
+        for i, info in ipairs(self.kill_infos) do
+          info:update(self._t, i - 1)
+        end
+        self._update_x_pos = nil
       end
     end
   end

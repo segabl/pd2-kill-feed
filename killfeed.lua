@@ -7,7 +7,7 @@ if not KillFeed then
   KillFeed.unit_information = {}
   KillFeed.assist_information = {}
   KillFeed.localized_text = {}
-  KillFeed.unit_name = {
+  KillFeed.unit_names = {
     spooc = "Cloaker",
     tank_green = "Bulldozer",
     tank_black = "Blackdozer",
@@ -181,10 +181,10 @@ if not KillFeed then
     if not tweak then
       return
     end
-    if not self.unit_name[tweak] then
-      self.unit_name[tweak] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
+    if not self.unit_names[tweak] then
+      self.unit_names[tweak] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI")
     end
-    return self.unit_name[tweak]
+    return self.unit_names[tweak]
   end
   
   function KillFeed:get_unit_information(unit)
@@ -222,7 +222,8 @@ if not KillFeed then
       unit_type = "npc"
       if Keepers and gstate:is_enemy_converted_to_criminal(unit) then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
-      else
+      end
+      if not name or name == "" then
         name = self:get_name_by_tweak_data_id(unit_base._stats_name or tweak)
         if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
           name = owner:network():peer():name() .. "'s " .. name
@@ -234,7 +235,7 @@ if not KillFeed then
       return
     end
     
-    local is_special = gstate:is_enemy_special(unit) or tweak and (tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or (tweak:find("_boss") or tweak:find("_turret")))
+    local is_special = tweak and (tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or (tweak:find("_boss") or tweak:find("_turret")))
     local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
     local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
     

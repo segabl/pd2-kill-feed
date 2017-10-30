@@ -25,5 +25,8 @@
   "KillFeed_menu_show_assists_name" : "Montre les assistances",
   "KillFeed_menu_special_kills_only_name" : "Ne montre uniquement les Kills Spéciaux",
   "KillFeed_text_kill" : "à tué",
-  "KillFeed_text_destroy" : "à détruit"
+  "KillFeed_text_kill_pl" : "ont tué",
+  "KillFeed_text_destroy" : "à détruit",
+  "KillFeed_text_destroy_pl" : "ont détruit",
+  "KillFeed_text_and" : "et"
 }

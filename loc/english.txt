@@ -25,5 +25,8 @@
   "KillFeed_menu_show_assists_name" : "Show assists",
   "KillFeed_menu_special_kills_only_name" : "Only show Special kills",
   "KillFeed_text_kill" : "killed",
-  "KillFeed_text_destroy" : "destroyed"
+  "KillFeed_text_kill_pl" : "killed",
+  "KillFeed_text_destroy" : "destroyed",
+  "KillFeed_text_destroy_pl" : "destroyed",
+  "KillFeed_text_and" : "and"
 }

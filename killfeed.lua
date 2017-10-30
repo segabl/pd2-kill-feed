@@ -66,11 +66,14 @@ if not KillFeed then
     
     local w = 0
     if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
-      local kill_text
+      local show_assist = assist_info and assist_info.name ~= attacker_info.name
+      local kill_text, assist_text
       if KillFeed.settings.style == 1 then
-        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. "  " .. target_info.name
+        assist_text = "+"
+        kill_text = attacker_info.name .. (show_assist and (assist_text .. assist_info.name) or "") .. "  " .. target_info.name
       elseif KillFeed.settings.style == 2 then
-        kill_text = attacker_info.name .. (assist_info and ("+" .. assist_info.name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status) .. " " .. target_info.name
+        assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
+        kill_text = attacker_info.name .. (show_assist and (assist_text .. assist_info.name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status, show_assist) .. " " .. target_info.name
       end
       local text = self._panel:text({
         text = kill_text,
@@ -81,13 +84,13 @@ if not KillFeed then
       local _, _, tw, th = text:text_rect()
       w = tw
       
-      local len = utf8.len
-      text:set_range_color(0, len(attacker_info.name), attacker_info.color)
-      text:set_range_color(len(kill_text) - len(target_info.name), len(kill_text), target_info.color)
-      if assist_info then
-        local l = 1
-        text:set_range_color(len(attacker_info.name), len(attacker_info.name) + l, KillFeed.color.text)
-        text:set_range_color(len(attacker_info.name) + l, len(attacker_info.name) + l + len(assist_info.name), assist_info.color)
+      local l = utf8.len(kill_text)
+      text:set_range_color(0, attacker_info.name_len, attacker_info.color)
+      text:set_range_color(l - target_info.name_len, l, target_info.color)
+      if show_assist then
+        l = utf8.len(assist_text)
+        text:set_range_color(attacker_info.name_len, attacker_info.name_len + l, KillFeed.color.text)
+        text:set_range_color(attacker_info.name_len + l, attacker_info.name_len + l + assist_info.name_len, assist_info.color)
       end
     end
     
@@ -170,11 +173,12 @@ if not KillFeed then
     self._update_t = t
   end
   
-  function KillFeed:get_localized_text(text)
-    if not self.localized_text[text] then
-      self.localized_text[text] = managers.localization:text(text)
+  function KillFeed:get_localized_text(text, plural)
+    local key = text .. (plural and "_pl" or "")
+    if not self.localized_text[key] then
+      self.localized_text[key] = managers.localization:text(key)
     end
-    return self.localized_text[text]
+    return self.localized_text[key]
   end
   
   function KillFeed:get_name_by_tweak_data_id(tweak)
@@ -241,6 +245,7 @@ if not KillFeed then
     
     local information = {
       name = name,
+      name_len = utf8.len(name),
       color = color,
       type = unit_type,
       is_special = is_special

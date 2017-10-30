@@ -24,6 +24,9 @@
   "KillFeed_menu_show_npc_kills_name" : "Показывать убийства NPC",
   "KillFeed_menu_show_assists_name" : "Показывать помощь в убийстве",
   "KillFeed_menu_special_kills_only_name" : "Показывать только убийства спец. врагов",
-  "KillFeed_text_kill" : "Убил<а>",
-  "KillFeed_text_destroy" : "Уничтожил<а>"
+  "KillFeed_text_kill" : "убил",
+  "KillFeed_text_kill_pl" : "убили",
+  "KillFeed_text_destroy" : "уничтожил",
+  "KillFeed_text_destroy_pl" : "уничтожили",
+  "KillFeed_text_and" : "и"
 }

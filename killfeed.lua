@@ -312,8 +312,8 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if #self.kill_infos == 0 or recreate then
-        KillInfo:new({ name = "Dallas", color = tweak_data.chat_colors[1] }, { name = "Bulldozer", color = self.color.special }, self.settings.show_assists and { name = "Wolf", color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new({ name = "FBI Heavy SWAT", color = self.color.default }, { name = "Wolf's Sentry Gun", color = tweak_data.chat_colors[2] }, nil, "destroy")
+        KillInfo:new({ name = "Dallas", name_len = 6, color = tweak_data.chat_colors[1] }, { name = "Bulldozer", name_len = 9, color = self.color.special }, self.settings.show_assists and { name = "Wolf", name_len = 4, color = tweak_data.chat_colors[2] }, "kill")
+        KillInfo:new({ name = "FBI Heavy SWAT", name_len = 14, color = self.color.default }, { name = "Wolf's Sentry Gun", name_len = 17, color = tweak_data.chat_colors[2] }, nil, "destroy")
       else
         for i, info in ipairs(self.kill_infos) do
           info:update_x()

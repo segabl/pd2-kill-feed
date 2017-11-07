@@ -224,7 +224,7 @@ if not KillFeed then
       name = unit_base:nick_name()
     else
       unit_type = "npc"
-      if Keepers and gstate:is_enemy_converted_to_criminal(unit) then
+      if Keepers and unit_base.kpr_minion_owner_peer_id then
         name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
       end
       if not name or name == "" then

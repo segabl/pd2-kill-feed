@@ -14,18 +14,20 @@ if not KillFeed then
     tank_skull = "Skulldozer",
     tank_medic = "Medic Bulldozer",
     tank_mini = "Minigun Bulldozer",
-    tank_hw = "Headless Bulldozer",
+    tank_hw = "Headless Titandozer",
     swat_van_turret_module = "SWAT Turret",
     ceiling_turret_module = "Ceiling Turret",
     ceiling_turret_module_no_idle = "Ceiling Turret",
-    mobster_boss = "Commissar",
+    mobster_boss = "The Commissar",
     chavez_boss = "Chavez",
-    hector_boss = "Hector",
-    hector_boss_no_armor = "Hector",
+    hector_boss = "Hector Morales",
+    hector_boss_no_armor = "Hector Morales",
     drug_lord_boss = "Ernesto Sosa",
     drug_lord_boss_stealth = "Ernesto Sosa",
     old_hoxton_mission = "Hoxton",
-    spa_vip = "Charon"
+    spa_vip = "Charon",
+    phalanx_vip = "Neville Winters",
+    phalanx_minion = "Phalanx Shield"
   }
   KillFeed.settings = {
     x_align = 1,

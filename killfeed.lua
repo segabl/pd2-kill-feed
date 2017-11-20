@@ -190,7 +190,7 @@ if not KillFeed then
       return
     end
     if not self.unit_names[tweak] then
-      self.unit_names[tweak] = { [self._current_level_id] = string.capitalize(tweak:gsub("_", " ")):gsub("Swat", "SWAT"):gsub("Fbi", "FBI") }
+      self.unit_names[tweak] = { [self._current_level_id] = tweak:pretty(true):gsub("Swat", "SWAT"):gsub("Fbi", "FBI") }
     end
     return self.unit_names[tweak][self._current_level_id] or self.unit_names[tweak].default
   end

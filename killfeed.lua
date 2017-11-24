@@ -7,29 +7,6 @@ if not KillFeed then
   KillFeed.unit_information = {}
   KillFeed.assist_information = {}
   KillFeed.localized_text = {}
-  KillFeed.unit_names = {
-    spooc = { default = "Cloaker" },
-    tank_green = { default = "Bulldozer" },
-    tank_black = { default = "Blackdozer" },
-    tank_skull = { default = "Skulldozer" },
-    tank_medic = { default = "Medic Bulldozer" },
-    tank_mini = { default = "Minigun Bulldozer" },
-    tank_hw = { default = "Headless Titandozer" },
-    swat_van_turret_module = { default = "SWAT Turret" },
-    ceiling_turret_module = { default = "Ceiling Turret" },
-    ceiling_turret_module_no_idle = { default = "Ceiling Turret" },
-    mobster_boss = { default = "The Commissar" },
-    chavez_boss = { default = "Chavez" },
-    hector_boss = { default = "Hector Morales" },
-    hector_boss_no_armor = { default = "Hector Morales" },
-    drug_lord_boss = { default = "Ernesto Sosa" },
-    drug_lord_boss_stealth = { default = "Ernesto Sosa" },
-    old_hoxton_mission = { default = "Hoxton" },
-    spa_vip = { default = "Charon" },
-    phalanx_vip = { default = "Neville Winters" },
-    phalanx_minion = { default = "Phalanx Shield" },
-    bank_manager = { default = "Bank Manager", dah = "Ralph Garnet" }
-  }
   KillFeed.settings = {
     x_align = 1,
     y_align = 1,
@@ -50,12 +27,35 @@ if not KillFeed then
     update_rate = 1 / 30,
     assist_time = 4
   }
-  KillFeed.color = {
+  KillFeed.colors = {
     default = Color.white,
     special = Color(tweak_data.contour.character.dangerous_color:unpack()),
     text = Color.white:with_alpha(0.8),
     skull = Color.yellow
   }
+  KillFeed.unit_names = {
+    spooc = { default = "Cloaker" },
+    tank_green = { default = "Bulldozer" },
+    tank_black = { default = "Blackdozer" },
+    tank_skull = { default = "Skulldozer" },
+    tank_medic = { default = "Medic Bulldozer" },
+    tank_mini = { default = "Minigun Bulldozer" },
+    tank_hw = { default = "Headless Titandozer" },
+    swat_van_turret_module = { default = "SWAT Turret" },
+    ceiling_turret_module = { default = "Ceiling Turret" },
+    mobster_boss = { default = "The Commissar" },
+    chavez_boss = { default = "Chavez" },
+    hector_boss = { default = "Hector Morales" },
+    drug_lord_boss = { default = "Ernesto Sosa" },
+    old_hoxton_mission = { default = "Hoxton" },
+    spa_vip = { default = "Charon" },
+    phalanx_vip = { default = "Neville Winters" },
+    phalanx_minion = { default = "Phalanx Shield" },
+    bank_manager = { default = "Bank Manager", dah = "Ralph Garnet" }
+  }
+  KillFeed.unit_names.ceiling_turret_module_no_idle = KillFeed.unit_names.ceiling_turret_module
+  KillFeed.unit_names.hector_boss_no_armor = KillFeed.unit_names.hector_boss
+  KillFeed.unit_names.drug_lord_boss_stealth = KillFeed.unit_names.drug_lord_boss
   
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
@@ -64,7 +64,6 @@ if not KillFeed then
     self._panel = KillFeed._panel:panel({
       alpha = 0,
       layer = 100,
-      h = KillFeed.settings.font_size
     })
     
     local w = 0
@@ -82,7 +81,7 @@ if not KillFeed then
         text = kill_text,
         font = tweak_data.menu.pd2_large_font,
         font_size = KillFeed.settings.font_size,
-        color = KillFeed.settings.style == 1 and KillFeed.color.skull or KillFeed.color.text
+        color = KillFeed.settings.style == 1 and KillFeed.colors.skull or KillFeed.colors.text
       })
       local _, _, tw, th = text:text_rect()
       w = tw
@@ -92,12 +91,12 @@ if not KillFeed then
       text:set_range_color(l - target_info.name_len, l, target_info.color)
       if show_assist then
         l = utf8.len(assist_text)
-        text:set_range_color(attacker_info.name_len, attacker_info.name_len + l, KillFeed.color.text)
+        text:set_range_color(attacker_info.name_len, attacker_info.name_len + l, KillFeed.colors.text)
         text:set_range_color(attacker_info.name_len + l, attacker_info.name_len + l + assist_info.name_len, assist_info.color)
       end
     end
     
-    self._panel:set_w(w)
+    self._panel:set_size(w, KillFeed.settings.font_size)
     
     if KillFeed.settings.x_align == 1 then
       self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
@@ -109,9 +108,9 @@ if not KillFeed then
     
     local offset = #KillFeed.kill_infos
     if KillFeed.settings.y_align == 1 then
-      self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * KillFeed.settings.font_size)
+      self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * self._panel:h())
     else
-      self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * KillFeed.settings.font_size)
+      self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * self._panel:h())
     end
     
     self._created_t = KillFeed._t
@@ -132,9 +131,9 @@ if not KillFeed then
     
     local pos = KillFeed.settings.y_align == 1 and self._panel:top() or self._panel:bottom()
     if KillFeed.settings.y_align == 1 then
-      self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * KillFeed.settings.font_size) - pos) / 2)
+      self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * self._panel:h()) - pos) / 2)
     else
-      self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * KillFeed.settings.font_size) - pos) / 2)
+      self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * self._panel:h()) - pos) / 2)
     end
   end
   
@@ -245,7 +244,7 @@ if not KillFeed then
     
     local is_special = tweak and (tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or (tweak:find("_boss") or tweak:find("_turret")))
     local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
-    local color = is_special and KillFeed.color.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or KillFeed.color.default
+    local color = is_special and self.colors.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or self.colors.default
     
     local information = {
       name = name,
@@ -316,8 +315,8 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if #self.kill_infos == 0 or recreate then
-        KillInfo:new({ name = "Dallas", name_len = 6, color = tweak_data.chat_colors[1] }, { name = "Bulldozer", name_len = 9, color = self.color.special }, self.settings.show_assists and { name = "Wolf", name_len = 4, color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new({ name = "FBI Heavy SWAT", name_len = 14, color = self.color.default }, { name = "Wolf's Sentry Gun", name_len = 17, color = tweak_data.chat_colors[2] }, nil, "destroy")
+        KillInfo:new({ name = "Dallas", name_len = 6, color = tweak_data.chat_colors[1] }, { name = "Bulldozer", name_len = 9, color = self.colors.special }, self.settings.show_assists and { name = "Wolf", name_len = 4, color = tweak_data.chat_colors[2] }, "kill")
+        KillInfo:new({ name = "FBI Heavy SWAT", name_len = 14, color = self.colors.default }, { name = "Wolf's Sentry Gun", name_len = 17, color = tweak_data.chat_colors[2] }, nil, "destroy")
       else
         for i, info in ipairs(self.kill_infos) do
           info:update_x()
@@ -376,8 +375,8 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
     return convert_to_criminal_original(self, ...)
   end
 
-  local _on_damage_received_original = CopDamage._on_damage_received
-  function CopDamage:_on_damage_received(damage_info, ...)
+  local _call_listeners_original = CopDamage._call_listeners
+  function CopDamage:_call_listeners(damage_info, ...)
     if self._dead then
       if not self._kill_feed_shown then
         KillFeed:add_kill(damage_info, self._unit)
@@ -386,25 +385,7 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
     elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
       KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
     end
-    return _on_damage_received_original(self, damage_info, ...)
-  end
-
-end
-
-
-if RequiredScript == "lib/units/civilians/civiliandamage" then
-
-  local _on_damage_received_original = CivilianDamage._on_damage_received
-  function CivilianDamage:_on_damage_received(damage_info, ...)
-    if self._dead then
-      if not self._kill_feed_shown then
-        KillFeed:add_kill(damage_info, self._unit)
-        self._kill_feed_shown = true
-      end
-    elseif KillFeed.settings.show_assists and alive(damage_info.attacker_unit) and type(damage_info.damage) == "number" then
-      KillFeed:set_assist_information(self._unit, damage_info.attacker_unit, damage_info.damage)
-    end
-    return _on_damage_received_original(self, damage_info, ...)
+    return _call_listeners_original(self, damage_info, ...)
   end
 
 end

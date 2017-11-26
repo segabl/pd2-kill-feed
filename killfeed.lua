@@ -221,7 +221,7 @@ if not KillFeed then
     local name, unit_type
     if unit_base.is_husk_player or unit_base.is_local_player then
       unit_type = unit_base.is_local_player and "player" or "crew"
-      name = unit:network():peer():name()
+      name = unit_base.is_local_player and managers.network.account:username() or unit:network():peer():name()
     elseif gstate:is_unit_team_AI(unit) then
       unit_type = "team_ai"
       name = unit_base:nick_name()
@@ -233,7 +233,7 @@ if not KillFeed then
       if not name or name == "" then
         name = self:get_name_by_tweak_data_id(unit_base._stats_name or tweak)
         if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
-          name = owner:network():peer():name() .. "'s " .. name
+          name = (owner_base.is_local_player and managers.network.account:username() or owner:network():peer():name()) .. "'s " .. name
         end
       end
     end

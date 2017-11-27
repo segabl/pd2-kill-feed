@@ -4,7 +4,6 @@ if not KillFeed then
   KillFeed.mod_path = ModPath
   KillFeed.save_path = SavePath
   KillFeed.kill_infos = {}
-  KillFeed.unit_information = {}
   KillFeed.assist_information = {}
   KillFeed.localized_text = {}
   KillFeed.settings = {
@@ -18,9 +17,11 @@ if not KillFeed then
     lifetime = 3,
     fade_in_time = 0.25,
     fade_out_time = 0.25,
-    show_player_kills = true,
-    show_crew_kills = true,
+    show_local_player_kills = true,
+    show_remote_player_kills = true,
     show_team_ai_kills = true,
+    show_joker_kills = true,
+    show_sentry_kills = true,
     show_npc_kills = true,
     show_assists = true,
     special_kills_only = false,
@@ -33,29 +34,6 @@ if not KillFeed then
     text = Color.white:with_alpha(0.8),
     skull = Color.yellow
   }
-  KillFeed.unit_names = {
-    spooc = { default = "Cloaker" },
-    tank_green = { default = "Bulldozer" },
-    tank_black = { default = "Blackdozer" },
-    tank_skull = { default = "Skulldozer" },
-    tank_medic = { default = "Medic Bulldozer" },
-    tank_mini = { default = "Minigun Bulldozer" },
-    tank_hw = { default = "Headless Titandozer" },
-    swat_van_turret_module = { default = "SWAT Turret" },
-    ceiling_turret_module = { default = "Ceiling Turret" },
-    mobster_boss = { default = "The Commissar" },
-    chavez_boss = { default = "Chavez" },
-    hector_boss = { default = "Hector Morales" },
-    drug_lord_boss = { default = "Ernesto Sosa" },
-    old_hoxton_mission = { default = "Hoxton" },
-    spa_vip = { default = "Charon" },
-    phalanx_vip = { default = "Neville Winters" },
-    phalanx_minion = { default = "Phalanx Shield" },
-    bank_manager = { default = "Bank Manager", dah = "Ralph Garnet" }
-  }
-  KillFeed.unit_names.ceiling_turret_module_no_idle = KillFeed.unit_names.ceiling_turret_module
-  KillFeed.unit_names.hector_boss_no_armor = KillFeed.unit_names.hector_boss
-  KillFeed.unit_names.drug_lord_boss_stealth = KillFeed.unit_names.drug_lord_boss
   
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
@@ -67,15 +45,29 @@ if not KillFeed then
     })
     
     local w = 0
+    
+    local attacker_name, attacker_color, target_name, target_color, assist_name, assist_color
+    
+    attacker_name = attacker_info:nickname()
+    attacker_color = attacker_info._is_special and KillFeed.colors.special or attacker_info._color_id and attacker_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info._color_id]
+    
+    target_name = target_info:nickname()
+    target_color = target_info._is_special and KillFeed.colors.special or target_info._color_id and target_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[target_info._color_id]
+    
+    if assist_info then
+      assist_name = assist_info:nickname()
+      assist_color = assist_info._is_special and KillFeed.colors.special or assist_info._color_id and assist_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info._color_id]
+    end
+    
     if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
-      local show_assist = assist_info and assist_info.name ~= attacker_info.name
+      local show_assist = assist_info and assist_name ~= attacker_name
       local kill_text, assist_text
       if KillFeed.settings.style == 1 then
         assist_text = "+"
-        kill_text = attacker_info.name .. (show_assist and (assist_text .. assist_info.name) or "") .. "  " .. target_info.name
+        kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. "  " .. target_name
       elseif KillFeed.settings.style == 2 then
         assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
-        kill_text = attacker_info.name .. (show_assist and (assist_text .. assist_info.name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status, show_assist) .. " " .. target_info.name
+        kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status, show_assist) .. " " .. target_name
       end
       local text = self._panel:text({
         text = kill_text,
@@ -86,13 +78,15 @@ if not KillFeed then
       local _, _, tw, th = text:text_rect()
       w = tw
       
-      local l = utf8.len(kill_text)
-      text:set_range_color(0, attacker_info.name_len, attacker_info.color)
-      text:set_range_color(l - target_info.name_len, l, target_info.color)
+      local utf8_len = utf8.len
+      local l = utf8_len(kill_text)
+      local la = utf8_len(attacker_name)
+      text:set_range_color(0, la, attacker_color or KillFeed.colors.default)
+      text:set_range_color(l - utf8_len(target_name), l, target_color or KillFeed.colors.default)
       if show_assist then
         l = utf8.len(assist_text)
-        text:set_range_color(attacker_info.name_len, attacker_info.name_len + l, KillFeed.colors.text)
-        text:set_range_color(attacker_info.name_len + l, attacker_info.name_len + l + assist_info.name_len, assist_info.color)
+        text:set_range_color(la, la + l, KillFeed.colors.text)
+        text:set_range_color(la + l, la + l + utf8_len(assist_name), assist_color or KillFeed.colors.default)
       end
     end
     
@@ -159,7 +153,6 @@ if not KillFeed then
     self:load()
     self._ws = managers.hud._workspace
     self._panel = self._panel or hud and hud.panel or self._ws:panel({name = "KillFeed" })
-    self._current_level_id = managers.job and managers.job:current_level_id() or ""
   end
 
   function KillFeed:update(t, dt)
@@ -184,79 +177,6 @@ if not KillFeed then
     return self.localized_text[key]
   end
   
-  function KillFeed:get_name_by_tweak_data_id(tweak)
-    if not tweak then
-      return
-    end
-    if not self.unit_names[tweak] then
-      self.unit_names[tweak] = { [self._current_level_id] = tweak:pretty(true):gsub("Swat", "SWAT"):gsub("Fbi", "FBI") }
-    end
-    return self.unit_names[tweak][self._current_level_id] or self.unit_names[tweak].default
-  end
-  
-  function KillFeed:get_unit_information(unit)
-    if not alive(unit) then
-      return
-    end
-    local unit_key = unit:key()
-    local info = self.unit_information[unit_key]
-    if info then
-      return self.unit_information[unit_key]
-    end
-    local unit_base = unit:base()
-    
-    if alive(unit_base._thrower_unit) then
-      unit = unit_base._thrower_unit
-      unit_base = unit:base()
-    end
-    
-    local tweak = unit_base._tweak_table or unit_base._tweak_table_id
-    
-    local gstate = managers.groupai:state()
-    local cm = managers.criminals
-    
-    local owner = unit_base._owner or unit_base.get_owner and unit_base:get_owner() or unit_base.kpr_minion_owner_peer_id and cm:character_unit_by_peer_id(unit_base.kpr_minion_owner_peer_id)
-    local owner_base = alive(owner) and owner:base()
-    
-    local name, unit_type
-    if unit_base.is_husk_player or unit_base.is_local_player then
-      unit_type = unit_base.is_local_player and "player" or "crew"
-      name = unit_base.is_local_player and managers.network.account:username() or unit:network():peer():name()
-    elseif gstate:is_unit_team_AI(unit) then
-      unit_type = "team_ai"
-      name = unit_base:nick_name()
-    else
-      unit_type = "npc"
-      if Keepers and unit_base.kpr_minion_owner_peer_id then
-        name = Keepers:GetJokerNameByPeer(unit_base.kpr_minion_owner_peer_id)
-      end
-      if not name or name == "" then
-        name = self:get_name_by_tweak_data_id(unit_base._stats_name or tweak)
-        if name and owner_base and (owner_base.is_husk_player or owner_base.is_local_player) then
-          name = (owner_base.is_local_player and managers.network.account:username() or owner:network():peer():name()) .. "'s " .. name
-        end
-      end
-    end
-    
-    if not name then
-      return
-    end
-    
-    local is_special = tweak and (tweak_data.character[tweak] and tweak_data.character[tweak].priority_shout or (tweak:find("_boss") or tweak:find("_turret")))
-    local color_id = alive(owner) and cm:character_color_id_by_unit(owner) or alive(unit) and cm:character_color_id_by_unit(unit)
-    local color = is_special and self.colors.special or color_id and color_id < #tweak_data.chat_colors and tweak_data.chat_colors[color_id] or self.colors.default
-    
-    local information = {
-      name = name,
-      name_len = utf8.len(name),
-      color = color,
-      type = unit_type,
-      is_special = is_special
-    }
-    self.unit_information[unit_key] = information
-    return information
-  end
-   
   function KillFeed:get_assist_information(unit, killer)
     if not alive(unit) or not alive(killer) then
       return
@@ -275,7 +195,7 @@ if not KillFeed then
         most_damage = v.damage
       end
     end
-    return self:get_unit_information(most_damage_unit)
+    return HopLib.unit_info_manager:get_info(most_damage_unit)
   end
   
   function KillFeed:set_assist_information(unit, attacker, damage)
@@ -292,12 +212,13 @@ if not KillFeed then
   end
 
   function KillFeed:add_kill(damage_info, target, status)
-    local target_info = self:get_unit_information(target)
-    if not target_info or self.settings.special_kills_only and not target_info.is_special then
+    local target_info = HopLib.unit_info_manager:get_info(target)
+    target_info = target_info and target_info:user()
+    if not target_info or self.settings.special_kills_only and not target_info._is_special then
       return
     end
-    local attacker_info = self:get_unit_information(damage_info.attacker_unit)
-    if not attacker_info or not self.settings["show_" .. attacker_info.type .. "_kills"] then
+    local attacker_info = HopLib.unit_info_manager:get_user_info(damage_info.attacker_unit)
+    if not attacker_info or not self.settings["show_" .. (attacker_info._sub_type or attacker_info._type) .. "_kills"] then
       return
     end
     KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
@@ -315,8 +236,27 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if #self.kill_infos == 0 or recreate then
-        KillInfo:new({ name = "Dallas", name_len = 6, color = tweak_data.chat_colors[1] }, { name = "Bulldozer", name_len = 9, color = self.colors.special }, self.settings.show_assists and { name = "Wolf", name_len = 4, color = tweak_data.chat_colors[2] }, "kill")
-        KillInfo:new({ name = "FBI Heavy SWAT", name_len = 14, color = self.colors.default }, { name = "Wolf's Sentry Gun", name_len = 17, color = tweak_data.chat_colors[2] }, nil, "destroy")
+        local function fake_unit_info(name, color_id, is_special)
+          return { nickname = function () return name end, _color_id = color_id, _is_special = is_special }
+        end
+        if self.settings.show_local_player_kills then
+          KillInfo:new(fake_unit_info(managers.network.account:username(), 1), fake_unit_info("Bulldozer", nil, true), self.settings.show_assists and fake_unit_info("Wolf", 2), "kill")
+        end
+        if self.settings.show_remote_player_kills then
+          KillInfo:new(fake_unit_info("Shiny Hoppip", 3), fake_unit_info("FBI Heavy SWAT"), nil, "kill")
+        end
+        if self.settings.show_team_ai_kills then
+          KillInfo:new(fake_unit_info("Wolf", 2), fake_unit_info("SWAT Turret", nil, true), nil, "destroy")
+        end
+        if self.settings.show_joker_kills then
+          KillInfo:new(fake_unit_info("Hoxton's FBI SWAT", 4), fake_unit_info("Cop"), nil, "kill")
+        end
+        if self.settings.show_sentry_kills then
+          KillInfo:new(fake_unit_info("Wolf's Sentry Gun", 2), fake_unit_info("Taser", nil, true), nil, "kill")
+        end
+        if self.settings.show_npc_kills then
+          KillInfo:new(fake_unit_info("FBI Heavy SWAT"), fake_unit_info("Wolf's Sentry Gun", 2), nil, "destroy")
+        end
       else
         for i, info in ipairs(self.kill_infos) do
           info:update_x()
@@ -369,9 +309,7 @@ if RequiredScript == "lib/units/enemies/cop/copdamage" then
 
   local convert_to_criminal_original = CopDamage.convert_to_criminal
   function CopDamage:convert_to_criminal(...)
-    local unit_key = self._unit:key()
-    KillFeed.assist_information[unit_key] = nil
-    KillFeed.unit_information[unit_key] = nil
+    KillFeed.assist_information[self._unit:key()] = nil
     return convert_to_criminal_original(self, ...)
   end
 
@@ -434,7 +372,7 @@ if RequiredScript == "lib/managers/menumanager" then
     
     MenuCallbackHandler.KillFeed_toggle = function(self, item)
       KillFeed.settings[item:name()] = (item:value() == "on")
-      KillFeed:chk_create_sample_kill(item:name() == "show_assists")
+      KillFeed:chk_create_sample_kill(item:name():find("^show_"))
       KillFeed:save()
     end
 
@@ -578,18 +516,18 @@ if RequiredScript == "lib/managers/menumanager" then
       priority = 79
     })
     MenuHelper:AddToggle({
-      id = "show_player_kills",
+      id = "show_local_player_kills",
       title = "KillFeed_menu_show_player_kills_name",
       callback = "KillFeed_toggle",
-      value = KillFeed.settings.show_player_kills,
+      value = KillFeed.settings.show_local_player_kills,
       menu_id = menu_id_main,
       priority = 78
     })
     MenuHelper:AddToggle({
-      id = "show_crew_kills",
+      id = "show_remote_player_kills",
       title = "KillFeed_menu_show_crew_kills_name",
       callback = "KillFeed_toggle",
-      value = KillFeed.settings.show_crew_kills,
+      value = KillFeed.settings.show_remote_player_kills,
       menu_id = menu_id_main,
       priority = 77
     })
@@ -602,12 +540,28 @@ if RequiredScript == "lib/managers/menumanager" then
       priority = 76
     })
     MenuHelper:AddToggle({
+      id = "show_sentry_kills",
+      title = "KillFeed_menu_show_sentry_kills_name",
+      callback = "KillFeed_toggle",
+      value = KillFeed.settings.show_sentry_kills,
+      menu_id = menu_id_main,
+      priority = 75
+    })
+    MenuHelper:AddToggle({
+      id = "show_joker_kills",
+      title = "KillFeed_menu_show_joker_kills_name",
+      callback = "KillFeed_toggle",
+      value = KillFeed.settings.show_joker_kills,
+      menu_id = menu_id_main,
+      priority = 74
+    })
+    MenuHelper:AddToggle({
       id = "show_npc_kills",
       title = "KillFeed_menu_show_npc_kills_name",
       callback = "KillFeed_toggle",
       value = KillFeed.settings.show_npc_kills,
       menu_id = menu_id_main,
-      priority = 75
+      priority = 73
     })
     
     MenuHelper:AddDivider({

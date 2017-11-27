@@ -21,6 +21,8 @@
   "KillFeed_menu_show_player_kills_name" : "Meine Kills anzeigen",
   "KillFeed_menu_show_crew_kills_name" : "Crew Kills anzeigen",
   "KillFeed_menu_show_team_ai_kills_name" : "Team KI Kills anzeigen",
+  "KillFeed_menu_show_sentry_kills_name" : "Sentry Kills anzeigen",
+  "KillFeed_menu_show_joker_kills_name" : "Joker Kills anzeigen",
   "KillFeed_menu_show_npc_kills_name" : "NPC Kills anzeigen",
   "KillFeed_menu_show_assists_name" : "Assists anzeigen",
   "KillFeed_menu_special_kills_only_name" : "Nur Special Kills anzeigen",

@@ -5,8 +5,9 @@
   "blt_version" : 2,
   "color" : "0.043 0.808 0.6",
   "image" : "mod.png",
-  "version" : "2.2",
+  "version" : "2.3",
   "updates" : [ { "identifier" : "kill_feed" } ],
+  "dependencies" : [ "hoplib" ],
   "hooks" : [
     { "hook_id" : "lib/managers/hudmanager", "script_path" : "killfeed.lua" },
     { "hook_id" : "lib/managers/menumanager", "script_path" : "killfeed.lua" },

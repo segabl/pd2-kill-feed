@@ -21,6 +21,8 @@
   "KillFeed_menu_show_player_kills_name" : "Show my kills",
   "KillFeed_menu_show_crew_kills_name" : "Show crew kills",
   "KillFeed_menu_show_team_ai_kills_name" : "Show team AI kills",
+  "KillFeed_menu_show_sentry_kills_name" : "Show sentry kills",
+  "KillFeed_menu_show_joker_kills_name" : "Show joker kills",
   "KillFeed_menu_show_npc_kills_name" : "Show NPC kills",
   "KillFeed_menu_show_assists_name" : "Show assists",
   "KillFeed_menu_special_kills_only_name" : "Only show Special kills",

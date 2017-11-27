@@ -1,3 +1,7 @@
+if not HopLib then
+  return
+end
+
 if not KillFeed then
 
   _G.KillFeed = {}

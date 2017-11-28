@@ -21,6 +21,8 @@
   "KillFeed_menu_show_player_kills_name" : "显示我的击杀",
   "KillFeed_menu_show_crew_kills_name" : "显示团队击杀",
   "KillFeed_menu_show_team_ai_kills_name" : "显示团队AI击杀",
+  "KillFeed_menu_show_sentry_kills_name" : "显示哨戒机枪击杀",
+  "KillFeed_menu_show_joker_kills_name" : "显示JOKER技能击杀",
   "KillFeed_menu_show_npc_kills_name" : "显示NPC击杀",
   "KillFeed_menu_show_assists_name" : "显示助攻",
   "KillFeed_menu_special_kills_only_name" : "只显示特殊敌人击杀",

@@ -355,14 +355,24 @@ end
 if RequiredScript == "lib/managers/menumanager" then
 
   Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
-    loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt")
-    for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
-      local str = filename:match("^(.*).txt$")
-      if str and Idstring(str) and Idstring(str):key() == SystemInfo:language():key() then
-        loc:load_localization_file(KillFeed.mod_path .. "loc/" .. filename)
-        break
+    local loaded = false
+    if Idstring("english"):key() ~= SystemInfo:language():key() then
+      for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
+        local str = filename:match("^(.*).txt$")
+        if str and Idstring(str) and Idstring(str):key() == SystemInfo:language():key() then
+          loc:load_localization_file(KillFeed.mod_path .. "loc/" .. filename)
+          loaded = true
+          break
+        end
       end
     end
+    if not loaded then
+      local file = KillFeed.mod_path .. "loc/" .. BLT.Localization:get_language().language .. ".txt"
+      if io.file_is_readable(file) then
+        loc:load_localization_file(file)
+      end
+    end
+    loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt", false)
   end)
 
   local menu_id_main = "KillFeedMenu"

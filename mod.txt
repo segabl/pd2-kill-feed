@@ -10,8 +10,6 @@
   "dependencies" : [ "hoplib" ],
   "hooks" : [
     { "hook_id" : "lib/managers/hudmanager", "script_path" : "killfeed.lua" },
-    { "hook_id" : "lib/managers/menumanager", "script_path" : "killfeed.lua" },
-    { "hook_id" : "lib/units/enemies/cop/copdamage", "script_path" : "killfeed.lua" },
-    { "hook_id" : "lib/units/equipment/sentry_gun/sentrygundamage", "script_path" : "killfeed.lua" }
+    { "hook_id" : "lib/managers/menumanager", "script_path" : "killfeed.lua" }
   ]
 }

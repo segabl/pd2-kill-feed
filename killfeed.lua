@@ -63,7 +63,7 @@ if not KillFeed then
       assist_color = assist_info._is_special and KillFeed.colors.special or assist_info._color_id and assist_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info._color_id]
     end
     
-    if KillFeed.settings.style == 1 or KillFeed.settings.style == 2 then
+    if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 3 then
       local show_assist = assist_info and assist_name ~= attacker_name
       local kill_text, assist_text
       if KillFeed.settings.style == 1 then
@@ -72,6 +72,10 @@ if not KillFeed then
       elseif KillFeed.settings.style == 2 then
         assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
         kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status, show_assist) .. " " .. target_name
+      elseif KillFeed.settings.style == 3 then
+        local slang = KillFeed.killtexts and table.random(KillFeed.killtexts) or "killed"
+        assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
+        kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. " " .. slang .. " " .. target_name
       end
       local text = self._panel:text({
         text = kill_text,
@@ -286,6 +290,15 @@ if not KillFeed then
         self.settings[k] = v
       end
     end
+    local fname = self.save_path .. "killtexts.json"
+    if not io.file_is_readable(fname) then
+      fname = self.mod_path .. "killtexts.json"
+    end
+    file = io.open(fname)
+    if file then
+      self.killtexts = json.decode(file:read("*all")) or {}
+      file:close()
+    end
   end
   
   Hooks:Add("HopLibOnUnitDamaged", "HopLibOnUnitDamagedKillFeed", function (unit, damage_info)
@@ -423,7 +436,7 @@ if RequiredScript == "lib/managers/menumanager" then
       title = "KillFeed_menu_style_name",
       callback = "KillFeed_value",
       value = KillFeed.settings.style,
-      items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text" },
+      items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text", "KillFeed_menu_style_slang" },
       menu_id = menu_id_main,
       priority = 88
     })

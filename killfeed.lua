@@ -203,7 +203,7 @@ if not KillFeed then
         most_damage = v.damage
       end
     end
-    return HopLib.unit_info_manager:get_info(most_damage_unit)
+    return HopLib:unit_info_manager():get_info(most_damage_unit)
   end
   
   function KillFeed:set_assist_information(unit, attacker, damage)
@@ -220,12 +220,12 @@ if not KillFeed then
   end
 
   function KillFeed:add_kill(damage_info, target, status)
-    local target_info = HopLib.unit_info_manager:get_info(target)
+    local target_info = HopLib:unit_info_manager():get_info(target)
     target_info = target_info and target_info:user()
     if not target_info or self.settings.special_kills_only and not target_info._is_special then
       return
     end
-    local attacker_info = HopLib.unit_info_manager:get_user_info(damage_info.attacker_unit)
+    local attacker_info = HopLib:unit_info_manager():get_user_info(damage_info.attacker_unit)
     if not attacker_info or not self.settings["show_" .. (attacker_info._sub_type or attacker_info._type) .. "_kills"] then
       return
     end

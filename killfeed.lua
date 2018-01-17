@@ -53,14 +53,14 @@ if not KillFeed then
     local attacker_name, attacker_color, target_name, target_color, assist_name, assist_color
     
     attacker_name = attacker_info:nickname()
-    attacker_color = attacker_info._is_special and KillFeed.colors.special or attacker_info._color_id and attacker_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info._color_id]
+    attacker_color = (attacker_info._is_special or attacker_info._is_boss) and KillFeed.colors.special or attacker_info._color_id and attacker_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info._color_id]
     
     target_name = target_info:nickname()
-    target_color = target_info._is_special and KillFeed.colors.special or target_info._color_id and target_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[target_info._color_id]
+    target_color = (target_info._is_special or target_info._is_boss) and KillFeed.colors.special or target_info._color_id and target_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[target_info._color_id]
     
     if assist_info then
       assist_name = assist_info:nickname()
-      assist_color = assist_info._is_special and KillFeed.colors.special or assist_info._color_id and assist_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info._color_id]
+      assist_color = (assist_info._is_special or assist_info._is_boss) and KillFeed.colors.special or assist_info._color_id and assist_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info._color_id]
     end
     
     if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 3 then

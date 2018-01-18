@@ -290,15 +290,6 @@ if not KillFeed then
         self.settings[k] = v
       end
     end
-    local fname = self.save_path .. "killtexts.json"
-    if not io.file_is_readable(fname) then
-      fname = self.mod_path .. "killtexts.json"
-    end
-    file = io.open(fname)
-    if file then
-      self.killtexts = json.decode(file:read("*all")) or {}
-      file:close()
-    end
   end
   
   Hooks:Add("HopLibOnUnitDamaged", "HopLibOnUnitDamagedKillFeed", function (unit, damage_info)
@@ -333,24 +324,34 @@ end
 if RequiredScript == "lib/managers/menumanager" then
 
   Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
-    local loaded = false
-    if Idstring("english"):key() ~= SystemInfo:language():key() then
-      for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
-        local str = filename:match("^(.*).txt$")
-        if str and Idstring(str) and Idstring(str):key() == SystemInfo:language():key() then
-          loc:load_localization_file(KillFeed.mod_path .. "loc/" .. filename)
-          loaded = true
+    
+    local language = "english"
+    local english_language_key = Idstring("english"):key()
+    local system_language_key = SystemInfo:language():key()
+    local blt_language = BLT.Localization:get_language().language
+    
+    for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
+      local str = filename:match("^(.*).txt$")
+      if str then
+        if english_language_key == system_language_key and str == blt_language or english_language_key ~= system_language_key and Idstring(str):key() == SystemInfo:language():key() then
+          language = str
           break
         end
       end
     end
-    if not loaded then
-      local file = KillFeed.mod_path .. "loc/" .. BLT.Localization:get_language().language .. ".txt"
-      if io.file_is_readable(file) then
-        loc:load_localization_file(file)
-      end
-    end
+
+    loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt", false)
+    
+    local kt_saved = KillFeed.save_path .. "killtexts.txt"
+    local kt_loc = KillFeed.mod_path .. "data/killtexts_" .. language .. ".txt"
+    local kt_default = KillFeed.mod_path .. "data/killtexts_english.txt"
+    local killtexts_file = io.file_is_readable(kt_saved) and kt_saved or io.file_is_readable(kt_loc) and kt_loc or kt_default
+    local file = io.open(killtexts_file)
+    if file then
+      KillFeed.killtexts = json.decode(file:read("*all")) or {}
+      file:close()
+    end
   end)
 
   local menu_id_main = "KillFeedMenu"

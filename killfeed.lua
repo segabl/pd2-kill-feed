@@ -333,14 +333,16 @@ if RequiredScript == "lib/managers/menumanager" then
     for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
       local str = filename:match("^(.*).txt$")
       if str then
-        if system_is_english and str == blt_language or not system_is_english and Idstring(str):key() == system_language_key then
+        local system_match = not system_is_english and Idstring(str):key() == system_language_key
+        local blt_match = system_is_english and str == blt_language
+        if system_match or blt_match then
           language = str
+          loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")
           break
         end
       end
     end
 
-    loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt", false)
     
     local kt_saved = KillFeed.save_path .. "killtexts.txt"

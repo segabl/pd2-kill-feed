@@ -13,6 +13,7 @@
   "KillFeed_menu_style_name" : "样式",
   "KillFeed_menu_style_icon" : "图标",
   "KillFeed_menu_style_text" : "文字",
+  "KillFeed_menu_style_slang" : "有趣描述",
   "KillFeed_menu_font_size_name" : "字体大小",
   "KillFeed_menu_max_shown_name" : "显示最大信息数",
   "KillFeed_menu_lifetime_name" : "信息提示时间",

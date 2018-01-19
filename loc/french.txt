@@ -1,6 +1,6 @@
 {
   "KillFeed_menu_main_name" : "Kill Feed",
-  "KillFeed_menu_main_desc" : "Modifie les options de la KillFeed",
+  "KillFeed_menu_main_desc" : "Modifie les options de KillFeed",
   "KillFeed_menu_x_align_name" : "Alignement horizontal",
   "KillFeed_menu_y_align_name" : "Alignement vertical",
   "KillFeed_menu_align_left" : "Gauche",
@@ -13,6 +13,7 @@
   "KillFeed_menu_style_name" : "Style",
   "KillFeed_menu_style_icon" : "Icône",
   "KillFeed_menu_style_text" : "Texte",
+  "KillFeed_menu_style_slang" : "Argot",
   "KillFeed_menu_font_size_name" : "Taille de la Police",
   "KillFeed_menu_max_shown_name" : "Nombre maximal de messages",
   "KillFeed_menu_lifetime_name" : "Durées des messages",
@@ -20,7 +21,9 @@
   "KillFeed_menu_fade_out_time_name" : "Temps de disparition des messages",
   "KillFeed_menu_show_player_kills_name" : "Montre mes kills",
   "KillFeed_menu_show_crew_kills_name" : "Montre les kills de l'équipe",
-  "KillFeed_menu_show_team_ai_kills_name" : "Montre les kills des bots alliés",
+  "KillFeed_menu_show_team_ai_kills_name" : "Montre les kills des bots",
+  "KillFeed_menu_show_sentry_kills_name" : "Montre les kills des tourelles",
+  "KillFeed_menu_show_joker_kills_name" : "Montre les kills des flics convertis",
   "KillFeed_menu_show_npc_kills_name" : "Montre les kills des NPC",
   "KillFeed_menu_show_assists_name" : "Montre les assistances",
   "KillFeed_menu_special_kills_only_name" : "Ne montre uniquement les Kills Spéciaux",
@@ -28,5 +31,5 @@
   "KillFeed_text_kill_pl" : "ont tué",
   "KillFeed_text_destroy" : "à détruit",
   "KillFeed_text_destroy_pl" : "ont détruit",
-  "KillFeed_text_and" : "et"
+  "KillFeed_text_and" : "et",
 }

@@ -31,5 +31,5 @@
   "KillFeed_text_kill_pl" : "ont tué",
   "KillFeed_text_destroy" : "a détruit",
   "KillFeed_text_destroy_pl" : "ont détruit",
-  "KillFeed_text_and" : "et",
+  "KillFeed_text_and" : "et"
 }

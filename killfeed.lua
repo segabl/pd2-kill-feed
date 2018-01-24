@@ -335,7 +335,7 @@ if RequiredScript == "lib/managers/menumanager" then
       if str then
         local system_match = not system_is_english and Idstring(str):key() == system_language_key
         local blt_match = system_is_english and str == blt_language
-        local mod_match = PD2KR
+        local mod_match = PD2KR and str == "korean"
         if system_match or blt_match or mod_match then
           language = str
           loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")

@@ -338,20 +338,16 @@ if RequiredScript == "lib/managers/menumanager" then
     end
 
     if io.file_is_readable(KillFeed.mod_path .. "loc/" .. system_language .. "txt") then
-      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. system_language .. ".txt")
       language = system_language
     end
-    
     if io.file_is_readable(KillFeed.mod_path .. "loc/" .. blt_language .. "txt") then
-      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. blt_language .. ".txt")
       language = blt_language
     end
-    
     if mod_language and io.file_is_readable(KillFeed.mod_path .. "loc/" .. mod_language .. "txt") then
-      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. mod_language .. ".txt")
       language = mod_language
     end
 
+    loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt", false)
     
     local kt_saved = KillFeed.save_path .. "killtexts.txt"

@@ -32,7 +32,7 @@
   "finished",
   "ended",
   "noscoped",
-  "embarrased",
+  "embarrassed",
   "befriended",
   "assisted the suicide of",
   "ended the career of",
@@ -54,7 +54,7 @@
   "left a hole in",
   "dug a hole for",
   "loved and lost",
-  "accidently hit",
+  "accidentally hit",
   "went full-auto on",
   "went postal on",
   "redacted",
@@ -190,5 +190,14 @@
   "hacked",
   "sent a virus to",
   "sniped",
-  "gave a life lesson to"
+  "gave a life lesson to",
+  "stole the panties of",
+  "abandoned",
+  "exploded",
+  "absorbed the life force of",
+  "drained all the stamina from",
+  "wrote a poem for",
+  "used dark magic on",
+  "settled things with",
+  "ruined the life of"
 ]

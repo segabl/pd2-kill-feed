@@ -326,30 +326,30 @@ if RequiredScript == "lib/managers/menumanager" then
   Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
     
     local language = "english"
-    local system_language_key = SystemInfo:language():key()
-    local system_is_english = system_language_key == Idstring("english"):key()
+    local system_language = HopLib:get_game_language()
     local blt_language = BLT.Localization:get_language().language
-    local thai_mod
+    local mod_language = PD2KR and "korean"
 
     for _, mod in pairs(BLT and BLT.Mods:Mods() or {}) do
       if mod:GetName() == "PAYDAY 2 THAI LANGUAGE Mod" and mod:IsEnabled() then
-        thai_mod = true
+        mod_language = "thai"
         break
       end
     end
 
-    for _, filename in pairs(file.GetFiles(KillFeed.mod_path .. "loc/") or {}) do
-      local str = filename:match("^(.*).txt$")
-      if str then
-        local system_match = not system_is_english and Idstring(str):key() == system_language_key
-        local blt_match = system_is_english and str == blt_language
-        local mod_match = PD2KR and str == "korean" or thai_mod and str == "thai"
-        if system_match or blt_match or mod_match then
-          language = str
-          loc:load_localization_file(KillFeed.mod_path .. "loc/" .. language .. ".txt")
-          break
-        end
-      end
+    if io.file_is_readable(KillFeed.mod_path .. "loc/" .. system_language .. "txt") then
+      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. system_language .. ".txt")
+      language = system_language
+    end
+    
+    if io.file_is_readable(KillFeed.mod_path .. "loc/" .. blt_language .. "txt") then
+      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. blt_language .. ".txt")
+      language = blt_language
+    end
+    
+    if mod_language and io.file_is_readable(KillFeed.mod_path .. "loc/" .. mod_language .. "txt") then
+      loc:load_localization_file(KillFeed.mod_path .. "loc/" .. mod_language .. ".txt")
+      language = mod_language
     end
 
     loc:load_localization_file(KillFeed.mod_path .. "loc/english.txt", false)

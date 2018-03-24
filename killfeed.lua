@@ -9,7 +9,6 @@ if not KillFeed then
   KillFeed.save_path = SavePath
   KillFeed.kill_infos = {}
   KillFeed.assist_information = {}
-  KillFeed.localized_text = {}
   KillFeed.settings = {
     x_align = 1,
     y_align = 1,
@@ -53,14 +52,14 @@ if not KillFeed then
     local attacker_name, attacker_color, target_name, target_color, assist_name, assist_color
     
     attacker_name = attacker_info:nickname()
-    attacker_color = (attacker_info._is_special or attacker_info._is_boss) and KillFeed.colors.special or attacker_info._color_id and attacker_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info._color_id]
+    attacker_color = (attacker_info:is_special() or attacker_info:is_boss()) and KillFeed.colors.special or attacker_info:color_id() and attacker_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info:color_id()]
     
     target_name = target_info:nickname()
-    target_color = (target_info._is_special or target_info._is_boss) and KillFeed.colors.special or target_info._color_id and target_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[target_info._color_id]
+    target_color = (target_info:is_special() or target_info:is_boss()) and KillFeed.colors.special or target_info:color_id() and target_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[target_info:color_id()]
     
     if assist_info then
       assist_name = assist_info:nickname()
-      assist_color = (assist_info._is_special or assist_info._is_boss) and KillFeed.colors.special or assist_info._color_id and assist_info._color_id < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info._color_id]
+      assist_color = (assist_info:is_special() or assist_info:is_boss()) and KillFeed.colors.special or assist_info:color_id() and assist_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info:color_id()]
     end
     
     if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 3 then
@@ -178,11 +177,7 @@ if not KillFeed then
   end
   
   function KillFeed:get_localized_text(text, plural)
-    local key = text .. (plural and "_pl" or "")
-    if not self.localized_text[key] then
-      self.localized_text[key] = managers.localization:text(key)
-    end
-    return self.localized_text[key]
+    return managers.localization:text(text .. (plural and "_pl" or ""))
   end
   
   function KillFeed:get_assist_information(unit, killer)
@@ -222,11 +217,11 @@ if not KillFeed then
   function KillFeed:add_kill(damage_info, target, status)
     local target_info = HopLib:unit_info_manager():get_info(target)
     target_info = target_info and target_info:user()
-    if not target_info or self.settings.special_kills_only and not target_info._is_special then
+    if not target_info or self.settings.special_kills_only and not target_info:is_special() and not target_info:is_boss() then
       return
     end
     local attacker_info = HopLib:unit_info_manager():get_user_info(damage_info.attacker_unit)
-    if not attacker_info or not self.settings["show_" .. (attacker_info._sub_type or attacker_info._type) .. "_kills"] then
+    if not attacker_info or not self.settings["show_" .. (attacker_info:sub_type() or attacker_info:type()) .. "_kills"] then
       return
     end
     KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")

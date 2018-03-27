@@ -239,8 +239,13 @@ if not KillFeed then
         self.kill_infos = {}
       end
       if #self.kill_infos == 0 or recreate then
-        local function fake_unit_info(name, color_id, is_special)
-          return { nickname = function () return name end, _color_id = color_id, _is_special = is_special }
+        local function fake_unit_info(n, c, s)
+          return {
+            nickname = function () return n end,
+            color_id = function () return c end,
+            is_special = function () return s end,
+            is_boss = function () return end
+          }
         end
         if self.settings.show_local_player_kills then
           KillInfo:new(fake_unit_info(managers.network.account:username(), 1), fake_unit_info("Bulldozer", nil, true), self.settings.show_assists and fake_unit_info("Wolf", 2), "kill")

@@ -180,7 +180,7 @@
   "introduced micro-transactions to",
   "triggered",
   "removed every evidence of",
-  "put a arrow to the knee of",
+  "put an arrow to the knee of",
   "devastated",
   "was faster than",
   "broke",
@@ -199,5 +199,14 @@
   "wrote a poem for",
   "used dark magic on",
   "settled things with",
-  "ruined the life of"
+  "ruined the life of",
+  "used their Ultimate on",
+  "turned off",
+  "played a game with",
+  "confessed their love to",
+  "was too fast for",
+  "dissed",
+  "hurt the feelings of",
+  "was rude to",
+  "exploited"
 ]

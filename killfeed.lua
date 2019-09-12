@@ -330,9 +330,13 @@ if RequiredScript == "lib/managers/menumanager" then
     local blt_language = BLT.Localization:get_language().language
     local mod_language = PD2KR and "korean"
 
+    local mod_language_table = {
+      ["PAYDAY 2 THAI LANGUAGE Mod"] = "thai",
+      ["gabsF's Translate PT-BR Pack"] = "portuguese"
+    }
     for _, mod in pairs(BLT and BLT.Mods:Mods() or {}) do
-      if mod:GetName() == "PAYDAY 2 THAI LANGUAGE Mod" and mod:IsEnabled() then
-        mod_language = "thai"
+      if mod:IsEnabled() and mod_language_table[mod:GetName()] then
+        mod_language = mod_language_table[mod:GetName()]
         break
       end
     end

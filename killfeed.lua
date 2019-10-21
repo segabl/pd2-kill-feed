@@ -332,7 +332,7 @@ if RequiredScript == "lib/managers/menumanager" then
 
     local mod_language_table = {
       ["PAYDAY 2 THAI LANGUAGE Mod"] = "thai",
-      ["gabsF's Translate PT-BR Pack"] = "portuguese"
+      ["PAYDAY 2 Translate in Portuguese Brazilian"] = "portuguese"
     }
     for _, mod in pairs(BLT and BLT.Mods:Mods() or {}) do
       if mod:IsEnabled() and mod_language_table[mod:GetName()] then

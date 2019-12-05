@@ -6,8 +6,12 @@
   "color" : "0.043 0.808 0.6",
   "image" : "mod.png",
   "version" : "2.4",
-  "updates" : [ { "identifier" : "kill_feed" } ],
-  "dependencies" : [ "hoplib" ],
+  "updates" : [
+    {
+      "identifier" : "pd2-kill-feed",
+      "host": { "meta": "http://updates.hoppip.at/pd2-kill-feed" }
+    }
+  ],
   "hooks" : [
     { "hook_id" : "lib/managers/hudmanager", "script_path" : "killfeed.lua" },
     { "hook_id" : "lib/managers/menumanager", "script_path" : "killfeed.lua" }

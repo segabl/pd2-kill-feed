@@ -37,7 +37,7 @@ if not KillFeed then
     text = Color.white:with_alpha(0.8),
     skull = Color.yellow
   }
-  
+
   local KillInfo = class()
   KillFeed.KillInfo = KillInfo
 
@@ -46,22 +46,22 @@ if not KillFeed then
       alpha = 0,
       layer = 100,
     })
-    
+
     local w = 0
-    
+
     local attacker_name, attacker_color, target_name, target_color, assist_name, assist_color
-    
+
     attacker_name = attacker_info:nickname()
     attacker_color = (attacker_info:is_special() or attacker_info:is_boss()) and KillFeed.colors.special or attacker_info:color_id() and attacker_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[attacker_info:color_id()]
-    
+
     target_name = target_info:nickname()
     target_color = (target_info:is_special() or target_info:is_boss()) and KillFeed.colors.special or target_info:color_id() and target_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[target_info:color_id()]
-    
+
     if assist_info then
       assist_name = assist_info:nickname()
       assist_color = (assist_info:is_special() or assist_info:is_boss()) and KillFeed.colors.special or assist_info:color_id() and assist_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info:color_id()]
     end
-    
+
     if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 3 then
       local show_assist = assist_info and assist_name ~= attacker_name
       local kill_text, assist_text
@@ -84,7 +84,7 @@ if not KillFeed then
       })
       local _, _, tw, th = text:text_rect()
       w = tw
-      
+
       local utf8_len = utf8.len
       local l = utf8_len(kill_text)
       local la = utf8_len(attacker_name)
@@ -96,9 +96,9 @@ if not KillFeed then
         text:set_range_color(la + l, la + l + utf8_len(assist_name), assist_color or KillFeed.colors.default)
       end
     end
-    
+
     self._panel:set_size(w, KillFeed.settings.font_size)
-    
+
     if KillFeed.settings.x_align == 1 then
       self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
     elseif KillFeed.settings.x_align == 2 then
@@ -106,19 +106,19 @@ if not KillFeed then
     else
       self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
     end
-    
+
     local offset = #KillFeed.kill_infos
     if KillFeed.settings.y_align == 1 then
       self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * self._panel:h())
     else
       self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * self._panel:h())
     end
-    
+
     self._created_t = KillFeed._t
     self._lifetime = KillFeed.settings.lifetime + KillFeed.settings.fade_in_time + KillFeed.settings.fade_out_time
     table.insert(KillFeed.kill_infos, self)
   end
-  
+
   function KillInfo:update(t, offset)
     if self.dead then
       return
@@ -129,7 +129,7 @@ if not KillFeed then
       return
     end
     self._panel:set_alpha(math.min(f / (KillFeed.settings.fade_in_time / self._lifetime), (1 - f) / (KillFeed.settings.fade_out_time / self._lifetime), 1))
-    
+
     local pos = KillFeed.settings.y_align == 1 and self._panel:top() or self._panel:bottom()
     if KillFeed.settings.y_align == 1 then
       self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * self._panel:h()) - pos) / 2)
@@ -137,7 +137,7 @@ if not KillFeed then
       self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * self._panel:h()) - pos) / 2)
     end
   end
-  
+
   function KillInfo:update_x()
     if KillFeed.settings.x_align == 1 then
       self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
@@ -154,7 +154,7 @@ if not KillFeed then
       table.remove(KillFeed.kill_infos, pos)
     end
   end
-  
+
   function KillFeed:init()
     local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_FULLSCREEN_PD2)
     self:load()
@@ -175,11 +175,11 @@ if not KillFeed then
     end
     self._update_t = t
   end
-  
+
   function KillFeed:get_localized_text(text, plural)
     return managers.localization:text(text .. (plural and "_pl" or ""))
   end
-  
+
   function KillFeed:get_assist_information(unit, killer)
     if not alive(unit) or not alive(killer) then
       return
@@ -200,7 +200,7 @@ if not KillFeed then
     end
     return HopLib:unit_info_manager():get_info(most_damage_unit)
   end
-  
+
   function KillFeed:set_assist_information(unit, attacker, damage)
     if not alive(unit) or not alive(attacker) then
       return
@@ -229,7 +229,7 @@ if not KillFeed then
       self.kill_infos[1]:destroy(1)
     end
   end
-  
+
   function KillFeed:chk_create_sample_kill(recreate)
     if self._panel then
       if recreate then
@@ -272,7 +272,7 @@ if not KillFeed then
       end
     end
   end
-  
+
   function KillFeed:save()
     local file = io.open(self.save_path .. "kill_feed.txt", "w+")
     if file then
@@ -291,7 +291,7 @@ if not KillFeed then
       end
     end
   end
-  
+
   Hooks:Add("HopLibOnUnitDamaged", "HopLibOnUnitDamagedKillFeed", function (unit, damage_info)
     if unit:character_damage():dead() then
       KillFeed:add_kill(damage_info, unit)
@@ -324,22 +324,11 @@ end
 if RequiredScript == "lib/managers/menumanager" then
 
   Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
-    
+
     local language = "english"
     local system_language = HopLib:get_game_language()
     local blt_language = BLT.Localization:get_language().language
-    local mod_language = PD2KR and "korean"
-
-    local mod_language_table = {
-      ["PAYDAY 2 THAI LANGUAGE Mod"] = "thai",
-      ["PAYDAY 2 Translate in Portuguese Brazilian"] = "portuguese"
-    }
-    for _, mod in pairs(BLT and BLT.Mods:Mods() or {}) do
-      if mod:IsEnabled() and mod_language_table[mod:GetName()] then
-        mod_language = mod_language_table[mod:GetName()]
-        break
-      end
-    end
+    local mod_language = HopLib:get_modded_language()
 
     local loc_path = KillFeed.mod_path .. "loc/"
     if io.file_is_readable(loc_path .. system_language .. ".txt") then
@@ -354,7 +343,7 @@ if RequiredScript == "lib/managers/menumanager" then
 
     loc:load_localization_file(loc_path .. language .. ".txt")
     loc:load_localization_file(loc_path .. "english.txt", false)
-    
+
     local kt_saved = KillFeed.save_path .. "killtexts.txt"
     local kt_loc = KillFeed.mod_path .. "data/killtexts_" .. language .. ".txt"
     local killtexts_file = io.file_is_readable(kt_saved) and kt_saved or io.file_is_readable(kt_loc) and kt_loc or KillFeed.mod_path .. "data/killtexts_english.txt"
@@ -371,9 +360,9 @@ if RequiredScript == "lib/managers/menumanager" then
   end)
 
   Hooks:Add("MenuManagerPopulateCustomMenus", "MenuManagerPopulateCustomMenusKillFeed", function(menu_manager, nodes)
-    
+
     KillFeed:load()
-    
+
     MenuCallbackHandler.KillFeed_toggle = function(self, item)
       KillFeed.settings[item:name()] = (item:value() == "on")
       KillFeed:chk_create_sample_kill(item:name():find("^show_"))
@@ -385,7 +374,7 @@ if RequiredScript == "lib/managers/menumanager" then
       KillFeed:chk_create_sample_kill(item:name() == "style" or item:name() == "x_align" or item:name() == "y_align")
       KillFeed:save()
     end
-    
+
     MenuCallbackHandler.KillFeed_value_rounded = function(self, item)
       item:set_value(math.floor(item:value()))
       KillFeed.settings[item:name()] = item:value()
@@ -411,7 +400,7 @@ if RequiredScript == "lib/managers/menumanager" then
       menu_id = menu_id_main,
       priority = 98
     })
-    
+
     MenuHelper:AddSlider({
       id = "x_pos",
       title = "KillFeed_menu_x_pos_name",
@@ -436,7 +425,7 @@ if RequiredScript == "lib/managers/menumanager" then
       menu_id = menu_id_main,
       priority = 96
     })
-    
+
     MenuHelper:AddDivider({
       id = "divider",
       size = 24,
@@ -512,7 +501,7 @@ if RequiredScript == "lib/managers/menumanager" then
       menu_id = menu_id_main,
       priority = 82
     })
-    
+
     MenuHelper:AddDivider({
       id = "divider",
       size = 24,
@@ -567,7 +556,7 @@ if RequiredScript == "lib/managers/menumanager" then
       menu_id = menu_id_main,
       priority = 73
     })
-    
+
     MenuHelper:AddDivider({
       id = "divider",
       size = 24,
@@ -590,12 +579,12 @@ if RequiredScript == "lib/managers/menumanager" then
       menu_id = menu_id_main,
       priority = 67
     })
-    
+
   end)
 
   Hooks:Add("MenuManagerBuildCustomMenus", "MenuManagerBuildCustomMenusPlayerKillFeed", function(menu_manager, nodes)
     nodes[menu_id_main] = MenuHelper:BuildMenu(menu_id_main, { area_bg = "half" })
     MenuHelper:AddMenuItem(nodes["blt_options"], menu_id_main, "KillFeed_menu_main_name", "KillFeed_menu_main_desc")
   end)
-  
+
 end

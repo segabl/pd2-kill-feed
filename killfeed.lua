@@ -216,15 +216,18 @@ if not KillFeed then
 
 	function KillFeed:add_kill(damage_info, target, status)
 		local target_info = HopLib:unit_info_manager():get_info(target)
-		target_info = target_info and target_info:user()
 		if not target_info or self.settings.special_kills_only and not target_info:is_special() and not target_info:is_boss() then
 			return
 		end
-		local attacker_info = HopLib:unit_info_manager():get_user_info(damage_info.attacker_unit)
+		if not alive(damage_info.attacker_unit) or not damage_info.attacker_unit:base() then
+			return
+		end
+		local attacker_unit = damage_info.attacker_unit:base().thrower_unit and damage_info.attacker_unit:base():thrower_unit() or damage_info.attacker_unit
+		local attacker_info = HopLib:unit_info_manager():get_info(attacker_unit)
 		if not attacker_info or not self.settings["show_" .. attacker_info:type() .. "_kills"] then
 			return
 		end
-		KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")
+		KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, attacker_unit), status or "kill")
 		if #self.kill_infos > self.settings.max_shown then
 			self.kill_infos[1]:destroy(1)
 		end

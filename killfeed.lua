@@ -305,18 +305,13 @@ end
 
 if RequiredScript == "lib/managers/hudmanager" then
 
-	local init_finalize_original = HUDManager.init_finalize
-	function HUDManager:init_finalize(...)
-		local result = init_finalize_original(self, ...)
+	Hooks:PostHook(HUDManager, "init_finalize", "init_finalize_killfeed", function ()
 		KillFeed:init()
-		return result
-	end
+	end)
 
-	local update_original = HUDManager.update
-	function HUDManager:update(...)
-		update_original(self, ...)
+	Hooks:PostHook(HUDManager, "update", "update_killfeed", function (self, ...)
 		KillFeed:update(...)
-	end
+	end)
 
 end
 

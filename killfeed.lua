@@ -221,7 +221,7 @@ if not KillFeed then
 			return
 		end
 		local attacker_info = HopLib:unit_info_manager():get_user_info(damage_info.attacker_unit)
-		if not attacker_info or not self.settings["show_" .. (attacker_info:sub_type() or attacker_info:type()) .. "_kills"] then
+		if not attacker_info or not self.settings["show_" .. attacker_info:type() .. "_kills"] then
 			return
 		end
 		KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, damage_info.attacker_unit), status or "kill")

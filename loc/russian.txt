@@ -14,6 +14,8 @@
 	"KillFeed_menu_style_icon" : "Иконка",
 	"KillFeed_menu_style_text" : "Текст",
 	"KillFeed_menu_style_slang" : "Слэнг",
+	"KillFeed_menu_style_weapon" : "название оружия",
+	"KillFeed_menu_style_w_icon" : "изображение оружия",
 	"KillFeed_menu_font_size_name" : "Размер шрифта",
 	"KillFeed_menu_max_shown_name" : "Максимальное количество сообщений",
 	"KillFeed_menu_lifetime_name" : "Время сообщений",

@@ -14,6 +14,8 @@
 	"KillFeed_menu_style_icon" : "Icône",
 	"KillFeed_menu_style_text" : "Texte",
 	"KillFeed_menu_style_slang" : "Argot",
+	"KillFeed_menu_style_weapon" : "Nom de l'arme",
+	"KillFeed_menu_style_w_icon" : "Image d'arme",
 	"KillFeed_menu_font_size_name" : "Taille de la Police",
 	"KillFeed_menu_max_shown_name" : "Nombre maximal de messages",
 	"KillFeed_menu_lifetime_name" : "Durées des messages",

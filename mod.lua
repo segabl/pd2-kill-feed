@@ -41,13 +41,13 @@ if not KillFeed then
 	local KillInfo = class()
 	KillFeed.KillInfo = KillInfo
 
-	function KillInfo:init(attacker_info, target_info, assist_info, status)
+	function KillInfo:init(attacker_info, target_info, assist_info, status, damage_info)
 		self._panel = KillFeed._panel:panel({
 			alpha = 0,
 			layer = 100,
 		})
 
-		local w = 0
+		local w, h = 0, KillFeed.settings.font_size
 
 		local attacker_name, attacker_color, target_name, target_color, assist_name, assist_color
 
@@ -62,7 +62,9 @@ if not KillFeed then
 			assist_color = (assist_info:is_special() or assist_info:is_boss()) and KillFeed.colors.special or assist_info:color_id() and assist_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info:color_id()]
 		end
 
-		if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 3 then
+		if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 4 then
+			self._panel_h_add = 0
+
 			local show_assist = assist_info and assist_name ~= attacker_name
 			local kill_text, assist_text
 			if KillFeed.settings.style == 1 then
@@ -75,6 +77,9 @@ if not KillFeed then
 				local slang = KillFeed.killtexts and table.random(KillFeed.killtexts) or "killed"
 				assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
 				kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. " " .. slang .. " " .. target_name
+			elseif KillFeed.settings.style == 4 then
+				show_assist = false
+				kill_text = attacker_name .. " [" .. self:_get_weapon_name(damage_info) .. "] " .. target_name
 			end
 			local text = self._panel:text({
 				text = kill_text,
@@ -82,7 +87,7 @@ if not KillFeed then
 				font_size = KillFeed.settings.font_size,
 				color = KillFeed.settings.style == 1 and KillFeed.colors.skull or KillFeed.colors.text
 			})
-			local _, _, tw, th = text:text_rect()
+			local _, _, tw = text:text_rect()
 			w = tw
 
 			local utf8_len = utf8.len
@@ -95,9 +100,60 @@ if not KillFeed then
 				text:set_range_color(la, la + l, KillFeed.colors.text)
 				text:set_range_color(la + l, la + l + utf8_len(assist_name), assist_color or KillFeed.colors.default)
 			end
+		elseif KillFeed.settings.style == 5 then
+			self._panel_h_add = -h
+
+			h = KillFeed.settings.font_size * 2
+			local text = self._panel:text({
+				text = attacker_name,
+				font = tweak_data.menu.pd2_large_font,
+				font_size = KillFeed.settings.font_size,
+				color = attacker_color or KillFeed.colors.default,
+				vertical = "center",
+				h = h
+			})
+			local _, _, tw = text:text_rect()
+			w = w + tw
+
+			local weapon_icon = self:_get_weapon_icon(damage_info)
+			if weapon_icon then
+				local bitmap = self._panel:bitmap({
+					texture = weapon_icon[1],
+					x = w,
+				})
+				local bw, bh = bitmap:texture_width(), bitmap:texture_height()
+				if weapon_icon[2] then
+					bitmap:set_texture_rect(bw, 0, -bw, bh)
+				end
+				bw = bw * (h / bh)
+				bitmap:set_size(bw, h)
+				w = w + bw
+			else
+				local bitmap = self._panel:bitmap({
+					texture = "guis/textures/pd2/risklevel_blackscreen",
+					alpha = 0.5,
+					x = w + 8,
+					w = h * 0.75,
+					h = h * 0.75
+				})
+				bitmap:set_center_y(h * 0.5)
+				w = w + bitmap:w() + 16
+			end
+
+			text = self._panel:text({
+				x = w,
+				text = target_name,
+				font = tweak_data.menu.pd2_large_font,
+				font_size = KillFeed.settings.font_size,
+				color = target_color or KillFeed.colors.default,
+				vertical = "center",
+				h = h
+			})
+			_, _, tw = text:text_rect()
+			w = w + tw
 		end
 
-		self._panel:set_size(w, KillFeed.settings.font_size)
+		self._panel:set_size(w, h)
 
 		if KillFeed.settings.x_align == 1 then
 			self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
@@ -109,9 +165,9 @@ if not KillFeed then
 
 		local offset = #KillFeed.kill_infos
 		if KillFeed.settings.y_align == 1 then
-			self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * self._panel:h())
+			self._panel:set_top(KillFeed._panel:h() * KillFeed.settings.y_pos + (offset - 1) * (self._panel:h() + self._panel_h_add))
 		else
-			self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * self._panel:h())
+			self._panel:set_bottom(KillFeed._panel:h() * KillFeed.settings.y_pos - (offset + 1) * (self._panel:h() + self._panel_h_add))
 		end
 
 		self._created_t = KillFeed._t
@@ -132,9 +188,9 @@ if not KillFeed then
 
 		local pos = KillFeed.settings.y_align == 1 and self._panel:top() or self._panel:bottom()
 		if KillFeed.settings.y_align == 1 then
-			self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * self._panel:h()) - pos) / 2)
+			self._panel:set_top(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos + offset * (self._panel:h() + self._panel_h_add)) - pos) / 2)
 		else
-			self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * self._panel:h()) - pos) / 2)
+			self._panel:set_bottom(pos + ((KillFeed._panel:h() * KillFeed.settings.y_pos - offset * (self._panel:h() + self._panel_h_add)) - pos) / 2)
 		end
 	end
 
@@ -153,6 +209,124 @@ if not KillFeed then
 		if pos then
 			table.remove(KillFeed.kill_infos, pos)
 		end
+	end
+
+	local cached_weapon_names = {}
+	function KillInfo:_get_weapon_name(damage_info)
+		local id, data = self:_get_weapon_data(damage_info)
+		if not id then
+			return "???"
+		end
+
+		if not cached_weapon_names[id] then
+			local loc_id = data and (data.name_id or data.text_id)
+			if loc_id then
+				local name = managers.localization:text(loc_id)
+				for _, v in pairs(data.categories or {}) do
+					name = name:gsub("%s*" .. managers.localization:text("menu_" .. v) .. "s?$", "")
+				end
+				name = name:gsub("%s*Sniper Rifles?$", ""):gsub("%s*Rifles?$", ""):gsub("%s*Light Machine Guns?$", ""):gsub("%s*SMGs?$", "")
+				cached_weapon_names[id] = name
+			else
+				cached_weapon_names[id] = id:pretty(true)
+			end
+		end
+
+		return cached_weapon_names[id]
+	end
+
+	local cached_weapon_icons = {}
+	function KillInfo:_get_weapon_icon(damage_info)
+		local id, data = self:_get_weapon_data(damage_info)
+		if not id or not data then
+			return
+		end
+
+		if cached_weapon_icons[id] == nil then
+			local weapon_type = data.throwable and "grenades/" or data.expire_t and "melee_weapons/" or (data.use_function_name or data.FIRE_RANGE) and "deployables/" or "weapons/"
+			local guis_catalog = "guis/"
+			local folder = data.texture_bundle_folder or data.dlc
+			if folder then
+				guis_catalog = guis_catalog .. "dlcs/" .. tostring(folder) .. "/"
+			end
+
+			local texture_name = data.texture_name or tostring(id)
+			local texture_path = guis_catalog .. "textures/pd2/blackmarket/icons/" .. weapon_type .. texture_name
+			cached_weapon_icons[id] = { DB:has(Idstring("texture"), texture_path) and texture_path or false, weapon_type == "weapons/" }
+		end
+
+		return cached_weapon_icons[id]
+	end
+
+	local weapon_mapping = {
+		ak47 = "ak74",
+		ak47_ass = "ak74",
+		akmsu_smg = "akmsu",
+		asval_smg = "asval",
+		beretta92 = "b92fs",
+		c45 = "glock_17",
+		heavy_snp = "g3",
+		m14 = "new_m14",
+		m14_sniper = "g3",
+		m4 = "new_m4",
+		m4_yellow = "new_m4",
+		mac11 = "mac10",
+		mini = "m134",
+		mossberg = "huntsman",
+		mp5 = "new_mp5",
+		mp5_tactical = "new_mp5",
+		raging_bull = "new_raging_bull",
+		rpk_lmg = "rpk",
+		scar_murky = "scar",
+		sg417 = "contraband",
+		sr2_smg = "sr2",
+		svd_snp = "siltstone",
+		svdsil_snp = "siltstone",
+		ump = "schakal",
+		x_c45 = "x_g17",
+		baton = "oldbaton",
+		knife_1 = "x46",
+		environment_fire = "fire"
+	}
+	function KillInfo:_get_weapon_data(damage_info)
+		if not damage_info then
+			return
+		end
+		local variant = damage_info.variant
+
+		if variant == "melee" then
+			if damage_info.name_id then
+				return damage_info.name_id, tweak_data.blackmarket.melee_weapons[damage_info.name_id]
+			end
+			local melee_weapon_data = damage_info.attacker_unit:inventory() and damage_info.attacker_unit:inventory()._melee_weapon_data
+			if melee_weapon_data then
+				return melee_weapon_data.name_id, melee_weapon_data
+			end
+			if damage_info.attacker_unit:base().melee_weapon then
+				local id = damage_info.attacker_unit:base():melee_weapon()
+				id = weapon_mapping[id] or id
+				return id, tweak_data.blackmarket.melee_weapons[id]
+			end
+		end
+
+		local weapon_unit = damage_info.weapon_unit
+		if not alive(weapon_unit) and damage_info.attacker_unit:inventory() then
+			if variant == "bullet" or variant == "graze" then
+				weapon_unit = damage_info.attacker_unit:inventory():equipped_unit()
+			else
+				return variant
+			end
+		end
+
+		local weapon_base = alive(weapon_unit) and weapon_unit:base()
+		weapon_base = weapon_base and alive(weapon_base._weapon_unit) and weapon_base._weapon_unit:base() or weapon_base
+		if not weapon_base or not weapon_base.get_name_id then
+			return variant
+		end
+
+		local id = weapon_base._player_name_id or weapon_base:get_name_id():gsub("_npc$", ""):gsub("_crew$", "")
+		id = weapon_mapping[id] or id
+		return id, tweak_data.weapon[id] or tweak_data.blackmarket.projectiles[id] or tweak_data.equipments[id] or weapon_base
 	end
 
 	function KillFeed:init()
@@ -227,7 +401,7 @@ if not KillFeed then
 		if not attacker_info or not self.settings["show_" .. attacker_info:type() .. "_kills"] then
 			return
 		end
-		KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, attacker_unit), status or "kill")
+		KillInfo:new(attacker_info, target_info, self.settings.show_assists and self:get_assist_information(target, attacker_unit), status or "kill", damage_info)
 		if #self.kill_infos > self.settings.max_shown then
 			self.kill_infos[1]:destroy(1)
 		end
@@ -247,7 +421,7 @@ if not KillFeed then
 						nickname = function () return n end,
 						color_id = function () return c end,
 						is_special = function () return s end,
-						is_boss = function () return end
+						is_boss = function () end
 					}
 				end
 				if self.settings.show_local_player_kills then
@@ -305,7 +479,6 @@ if not KillFeed then
 
 end
 
-
 if RequiredScript == "lib/managers/hudmanager" then
 
 	Hooks:PostHook(HUDManager, "init_finalize", "init_finalize_killfeed", function ()
@@ -316,10 +489,7 @@ if RequiredScript == "lib/managers/hudmanager" then
 		KillFeed:update(...)
 	end)
 
-end
-
-
-if RequiredScript == "lib/managers/menumanager" then
+elseif RequiredScript == "lib/managers/menumanager" then
 
 	Hooks:Add("LocalizationManagerPostInit", "LocalizationManagerPostInitKillFeed", function(loc)
 
@@ -418,7 +588,7 @@ if RequiredScript == "lib/managers/menumanager" then
 			title = "KillFeed_menu_style_name",
 			callback = "KillFeed_value",
 			value = KillFeed.settings.style,
-			items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text", "KillFeed_menu_style_slang" },
+			items = { "KillFeed_menu_style_icon", "KillFeed_menu_style_text", "KillFeed_menu_style_slang", "KillFeed_menu_style_weapon", "KillFeed_menu_style_w_icon" },
 			menu_id = menu_id_main,
 			priority = 88
 		})

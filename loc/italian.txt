@@ -14,6 +14,8 @@
 	"KillFeed_menu_style_icon" : "Icona",
 	"KillFeed_menu_style_text" : "Testo",
 	"KillFeed_menu_style_slang" : "Slang",
+	"KillFeed_menu_style_weapon" : "Nome dell'arma ",
+	"KillFeed_menu_style_w_icon" : "Immagine dell'arma",
 	"KillFeed_menu_font_size_name" : "Dimensioni del font",
 	"KillFeed_menu_max_shown_name" : "Quantità di messaggi",
 	"KillFeed_menu_lifetime_name" : "Durata del messaggio",

@@ -222,8 +222,10 @@ if not KillFeed then
 			local loc_id = data and (data.name_id or data.text_id)
 			if loc_id then
 				local name = managers.localization:text(loc_id)
-				for _, v in pairs(data.categories or {}) do
-					name = name:gsub("%s*" .. managers.localization:text("menu_" .. v) .. "s?$", "")
+				if type(data.categories) == "table" then
+					for _, v in pairs(data.categories) do
+						name = name:gsub("%s*" .. managers.localization:text("menu_" .. v) .. "s?$", "")
+					end
 				end
 				name = name:gsub("%s*Sniper Rifles?$", ""):gsub("%s*Rifles?$", ""):gsub("%s*Light Machine Guns?$", ""):gsub("%s*SMGs?$", "")
 				cached_weapon_names[id] = name

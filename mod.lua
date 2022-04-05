@@ -62,15 +62,51 @@ if not KillFeed then
 			assist_color = (assist_info:is_special() or assist_info:is_boss()) and KillFeed.colors.special or assist_info:color_id() and assist_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info:color_id()]
 		end
 
-		if KillFeed.settings.style >= 1 and KillFeed.settings.style <= 4 then
-			self._panel_h_add = 0
+		self._panel_h_add = 0
 
-			local show_assist = assist_info and assist_name ~= attacker_name
+		local show_assist = assist_info and assist_name ~= attacker_name
+		local font = WFHud and WFHud.fonts.default_no_shadow or tweak_data.menu.pd2_large_font
+
+		if KillFeed.settings.style == 1 then
+			local attacker_str = attacker_name .. (show_assist and ("+" .. assist_name) or "")
+
+			local attacker_text = self._panel:text({
+				text = attacker_str,
+				font = font,
+				font_size = KillFeed.settings.font_size,
+				color = KillFeed.colors.text
+			})
+			local _, _, tw = attacker_text:text_rect()
+			w = tw
+
+			local la = utf8.len(attacker_name)
+			attacker_text:set_range_color(0, la, attacker_color or KillFeed.colors.default)
+			if show_assist then
+				attacker_text:set_range_color(la + 1, utf8.len(attacker_str), assist_color or KillFeed.colors.default)
+			end
+
+			local skull = self._panel:bitmap({
+				texture = "guis/textures/pd2/risklevel_blackscreen",
+				color = KillFeed.colors.skull,
+				x = w,
+				w = h,
+				h = h
+			})
+			skull:set_center_y(h * 0.5)
+			w = w + skull:w()
+
+			local target_text = self._panel:text({
+				text = target_name,
+				font = font,
+				font_size = KillFeed.settings.font_size,
+				color = target_color or KillFeed.colors.default,
+				x = w
+			})
+			local _, _, tw = target_text:text_rect()
+			w = w + tw
+		elseif KillFeed.settings.style >= 2 and KillFeed.settings.style <= 4 then
 			local kill_text, assist_text
-			if KillFeed.settings.style == 1 then
-				assist_text = "+"
-				kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. "  " .. target_name
-			elseif KillFeed.settings.style == 2 then
+			if KillFeed.settings.style == 2 then
 				assist_text = " " .. KillFeed:get_localized_text("KillFeed_text_and") .. " "
 				kill_text = attacker_name .. (show_assist and (assist_text .. assist_name) or "") .. " " .. KillFeed:get_localized_text("KillFeed_text_" .. status, show_assist) .. " " .. target_name
 			elseif KillFeed.settings.style == 3 then
@@ -83,22 +119,21 @@ if not KillFeed then
 			end
 			local text = self._panel:text({
 				text = kill_text,
-				font = tweak_data.menu.pd2_large_font,
+				font = font,
 				font_size = KillFeed.settings.font_size,
 				color = KillFeed.settings.style == 1 and KillFeed.colors.skull or KillFeed.colors.text
 			})
 			local _, _, tw = text:text_rect()
 			w = tw
 
-			local utf8_len = utf8.len
-			local l = utf8_len(kill_text)
-			local la = utf8_len(attacker_name)
+			local l = utf8.len(kill_text)
+			local la = utf8.len(attacker_name)
 			text:set_range_color(0, la, attacker_color or KillFeed.colors.default)
-			text:set_range_color(l - utf8_len(target_name), l, target_color or KillFeed.colors.default)
+			text:set_range_color(l - utf8.len(target_name), l, target_color or KillFeed.colors.default)
 			if show_assist then
 				l = utf8.len(assist_text)
 				text:set_range_color(la, la + l, KillFeed.colors.text)
-				text:set_range_color(la + l, la + l + utf8_len(assist_name), assist_color or KillFeed.colors.default)
+				text:set_range_color(la + l, la + l + utf8.len(assist_name), assist_color or KillFeed.colors.default)
 			end
 		elseif KillFeed.settings.style == 5 then
 			self._panel_h_add = -h
@@ -106,7 +141,7 @@ if not KillFeed then
 			h = KillFeed.settings.font_size * 2
 			local text = self._panel:text({
 				text = attacker_name,
-				font = tweak_data.menu.pd2_large_font,
+				font = font,
 				font_size = KillFeed.settings.font_size,
 				color = attacker_color or KillFeed.colors.default,
 				vertical = "center",
@@ -143,7 +178,7 @@ if not KillFeed then
 			text = self._panel:text({
 				x = w,
 				text = target_name,
-				font = tweak_data.menu.pd2_large_font,
+				font = font,
 				font_size = KillFeed.settings.font_size,
 				color = target_color or KillFeed.colors.default,
 				vertical = "center",

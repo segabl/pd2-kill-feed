@@ -2,10 +2,9 @@
 	"name" : "Kill Feed",
 	"description" : "Displays a highly customizable kill feed",
 	"author" : "Hoppip",
-	"contact" : "Hoppip#1630",
 	"color" : "0.043 0.808 0.6",
 	"image" : "mod.png",
-	"version" : "2.5",
+	"version" : "2.6",
 	"updates" : [{
 		"identifier" : "pd2-kill-feed",
 		"host": { "meta": "https://updates.hoppip.at/pd2-kill-feed" }

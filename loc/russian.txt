@@ -17,6 +17,7 @@
 	"KillFeed_menu_style_weapon" : "название оружия",
 	"KillFeed_menu_style_w_icon" : "изображение оружия",
 	"KillFeed_menu_font_size_name" : "Размер шрифта",
+	"KillFeed_menu_spacing_name" : "Message spacing",
 	"KillFeed_menu_max_shown_name" : "Максимальное количество сообщений",
 	"KillFeed_menu_lifetime_name" : "Время сообщений",
 	"KillFeed_menu_fade_in_time_name" : "Постепенное появление сообщений",

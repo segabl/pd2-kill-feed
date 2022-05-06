@@ -17,6 +17,7 @@
 	"KillFeed_menu_style_weapon" : "Waffenname",
 	"KillFeed_menu_style_w_icon" : "Waffenicon",
 	"KillFeed_menu_font_size_name" : "Textgröße",
+	"KillFeed_menu_spacing_name" : "Nachrichtenabstand",
 	"KillFeed_menu_max_shown_name" : "Maximale Nachrichtenanzahl",
 	"KillFeed_menu_lifetime_name" : "Nachrichten-Anzeigezeit",
 	"KillFeed_menu_fade_in_time_name" : "Nachrichten-Einblendezeit",

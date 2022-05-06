@@ -17,6 +17,7 @@
 	"KillFeed_menu_style_weapon" : "무기 이름",
 	"KillFeed_menu_style_w_icon" : "무기 이미지",
 	"KillFeed_menu_font_size_name" : "폰트 크기",
+	"KillFeed_menu_spacing_name" : "Message spacing",
 	"KillFeed_menu_max_shown_name" : "매세지",
 	"KillFeed_menu_lifetime_name" : "매세지 수명시간",
 	"KillFeed_menu_fade_in_time_name" : "매세지 페이드-인 시간",

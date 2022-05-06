@@ -17,6 +17,7 @@
 	"KillFeed_menu_style_weapon" : "Nombre del arma",
 	"KillFeed_menu_style_w_icon" : "Imagen de arma",
 	"KillFeed_menu_font_size_name" : "Tamaño de la fuente",
+	"KillFeed_menu_spacing_name" : "Message spacing",
 	"KillFeed_menu_max_shown_name" : "Cantidad máxima de mensajes",
 	"KillFeed_menu_lifetime_name" : "Duración del mensaje",
 	"KillFeed_menu_fade_in_time_name" : "Tiempo en aparecer",

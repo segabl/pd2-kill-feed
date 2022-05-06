@@ -16,6 +16,7 @@ if not KillFeed then
 		y_pos = 0.15,
 		style = 1,
 		font_size = tweak_data.menu.pd2_small_font_size,
+		spacing = 0,
 		max_shown = 5,
 		lifetime = 3,
 		fade_in_time = 0.25,
@@ -62,7 +63,7 @@ if not KillFeed then
 			assist_color = (assist_info:is_special() or assist_info:is_boss()) and KillFeed.colors.special or assist_info:color_id() and assist_info:color_id() < #tweak_data.chat_colors and tweak_data.chat_colors[assist_info:color_id()]
 		end
 
-		self._panel_h_add = 0
+		self._panel_h_add = KillFeed.settings.spacing
 
 		local show_assist = assist_info and assist_name ~= attacker_name
 		local font = WFHud and WFHud.fonts.default_no_shadow or tweak_data.menu.pd2_large_font
@@ -136,7 +137,7 @@ if not KillFeed then
 				text:set_range_color(la + l, la + l + utf8.len(assist_name), assist_color or KillFeed.colors.default)
 			end
 		elseif KillFeed.settings.style == 5 then
-			self._panel_h_add = -h
+			self._panel_h_add = self._panel_h_add - h
 
 			h = KillFeed.settings.font_size * 2
 			local text = self._panel:text({
@@ -255,7 +256,7 @@ if not KillFeed then
 
 		if not cached_weapon_names[id] then
 			local loc_id = data and (data.name_id or data.text_id)
-			if loc_id then
+			if loc_id and managers.localization:exists(loc_id) then
 				local name = managers.localization:text(loc_id)
 				if type(data.categories) == "table" then
 					for _, v in pairs(data.categories) do
@@ -323,6 +324,7 @@ if not KillFeed then
 		svdsil_snp = "siltstone",
 		ump = "schakal",
 		x_c45 = "x_g17",
+		flamethrower = "flamethrower_mk2",
 		baton = "oldbaton",
 		knife_1 = "x46",
 		environment_fire = "fire"
@@ -568,7 +570,7 @@ elseif RequiredScript == "lib/managers/menumanager" then
 		MenuCallbackHandler.KillFeed_value_rounded = function(self, item)
 			item:set_value(math.floor(item:value()))
 			KillFeed.settings[item:name()] = item:value()
-			KillFeed:chk_create_sample_kill(item:name() == "font_size")
+			KillFeed:chk_create_sample_kill(item:name() == "font_size" or item:name() == "spacing")
 			KillFeed:save()
 		end
 
@@ -642,6 +644,18 @@ elseif RequiredScript == "lib/managers/menumanager" then
 			show_value = true,
 			menu_id = menu_id_main,
 			priority = 87
+		})
+		MenuHelper:AddSlider({
+			id = "spacing",
+			title = "KillFeed_menu_spacing_name",
+			callback = "KillFeed_value_rounded",
+			value = KillFeed.settings.spacing,
+			min = 0,
+			max = 64,
+			step = 4,
+			show_value = true,
+			menu_id = menu_id_main,
+			priority = 86
 		})
 		MenuHelper:AddSlider({
 			id = "max_shown",

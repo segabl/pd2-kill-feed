@@ -492,22 +492,13 @@ if not KillFeed then
 	end
 
 	function KillFeed:save()
-		local file = io.open(self.save_path .. "kill_feed.txt", "w+")
-		if file then
-			file:write(json.encode(self.settings))
-			file:close()
-		end
+		io.save_as_json(self.settings, self.save_path .. "kill_feed.txt")
 	end
 
 	function KillFeed:load()
-		local file = io.open(self.save_path .. "kill_feed.txt", "r")
-		if file then
-			local data = json.decode(file:read("*all")) or {}
-			file:close()
-			for k, v in pairs(data) do
-				self.settings[k] = v
-			end
-		end
+		local save_path = self.save_path .. "kill_feed.txt"
+		local data = io.file_is_readable(save_path) and io.load_as_json(save_path) or {}
+		table.replace(self.settings, data, true)
 	end
 
 	Hooks:Add("HopLibOnUnitDamaged", "HopLibOnUnitDamagedKillFeed", function (unit, damage_info)
@@ -546,14 +537,12 @@ elseif RequiredScript == "lib/managers/menumanager" then
 		end
 	end)
 
-	local menu_id_main = "KillFeedMenu"
-	Hooks:Add("MenuManagerSetupCustomMenus", "MenuManagerSetupCustomMenusKillFeed", function(menu_manager, nodes)
-		MenuHelper:NewMenu(menu_id_main)
-	end)
-
-	Hooks:Add("MenuManagerPopulateCustomMenus", "MenuManagerPopulateCustomMenusKillFeed", function(menu_manager, nodes)
+	Hooks:Add("MenuManagerBuildCustomMenus", "MenuManagerBuildCustomMenusKillFeed", function(menu_manager, nodes)
+		local menu_id_main = "KillFeedMenu"
 
 		KillFeed:load()
+
+		MenuHelper:NewMenu(menu_id_main)
 
 		MenuCallbackHandler.KillFeed_toggle = function(self, item)
 			KillFeed.settings[item:name()] = (item:value() == "on")
@@ -784,9 +773,6 @@ elseif RequiredScript == "lib/managers/menumanager" then
 			priority = 67
 		})
 
-	end)
-
-	Hooks:Add("MenuManagerBuildCustomMenus", "MenuManagerBuildCustomMenusPlayerKillFeed", function(menu_manager, nodes)
 		nodes[menu_id_main] = MenuHelper:BuildMenu(menu_id_main, { area_bg = "half" })
 		MenuHelper:AddMenuItem(nodes["blt_options"], menu_id_main, "KillFeed_menu_main_name", "KillFeed_menu_main_desc")
 	end)

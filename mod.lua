@@ -39,6 +39,15 @@ if not KillFeed then
 		skull = Color.yellow
 	}
 
+	local icon_paths = { SavePath .. "kill_feed_icon.png", SavePath .. "kill_feed_icon.dds", SavePath .. "kill_feed_icon.texture" }
+	for _, path in pairs(icon_paths) do
+		if io.file_is_readable(path) then
+			KillFeed.custom_icon_path = "guis/textures/kill_feed_icon"
+			HopLib:load_assets({{ ext = Idstring("texture"), path = KillFeed.custom_icon_path, file = path }})
+			break
+		end
+	end
+
 	local KillInfo = class()
 	KillFeed.KillInfo = KillInfo
 
@@ -87,12 +96,11 @@ if not KillFeed then
 			end
 
 			local skull = self._panel:bitmap({
-				texture = "guis/textures/pd2/risklevel_blackscreen",
-				color = KillFeed.colors.skull,
-				x = w,
-				w = h,
-				h = h
+				texture = KillFeed.custom_icon_path or "guis/textures/pd2/risklevel_blackscreen",
+				color = not KillFeed.custom_icon_path and KillFeed.colors.skull,
+				x = w
 			})
+			skull:set_size((skull:texture_width() / skull:texture_height()) * h, h)
 			skull:set_center_y(h * 0.5)
 			w = w + skull:w()
 

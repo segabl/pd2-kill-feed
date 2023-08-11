@@ -379,10 +379,9 @@ if not KillFeed then
 	end
 
 	function KillFeed:init()
-		local hud = managers.hud:script(PlayerBase.PLAYER_INFO_HUD_FULLSCREEN_PD2)
 		self:load()
 		self._ws = managers.hud._workspace
-		self._panel = self._panel or hud and hud.panel or self._ws:panel({name = "KillFeed" })
+		self._panel = self._panel or managers.hud:panel(PlayerBase.PLAYER_INFO_HUD_FULLSCREEN_PD2) or self._ws:panel({name = "KillFeed" })
 	end
 
 	function KillFeed:update(t, dt)

@@ -199,13 +199,7 @@ if not KillFeed then
 
 		self._panel:set_size(w, h)
 
-		if KillFeed.settings.x_align == 1 then
-			self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
-		elseif KillFeed.settings.x_align == 2 then
-			self._panel:set_center(KillFeed._panel:w() * KillFeed.settings.x_pos)
-		else
-			self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
-		end
+		self:update_x()
 
 		local offset = #KillFeed.kill_infos
 		if KillFeed.settings.y_align == 1 then
@@ -242,7 +236,7 @@ if not KillFeed then
 		if KillFeed.settings.x_align == 1 then
 			self._panel:set_left(KillFeed._panel:w() * KillFeed.settings.x_pos)
 		elseif KillFeed.settings.x_align == 2 then
-			self._panel:set_center(KillFeed._panel:w() * KillFeed.settings.x_pos)
+			self._panel:set_center_x(KillFeed._panel:w() * KillFeed.settings.x_pos)
 		else
 			self._panel:set_right(KillFeed._panel:w() * KillFeed.settings.x_pos)
 		end

@@ -329,7 +329,9 @@ if not KillFeed then
 		flamethrower = "flamethrower_mk2",
 		baton = "oldbaton",
 		knife_1 = "x46",
-		environment_fire = "fire"
+		environment_fire = "fire",
+		dmr = "victor",
+		sko12_conc = "sko12"
 	}
 	function KillInfo:_get_weapon_data(damage_info)
 		if not damage_info then
